@@ -54,19 +54,19 @@ export default function Home() {
           <Box sx={{ mt: 4, display: 'flex', flexDirection: 'column', width: '100%' }}>
             <Button
               component={Link}
-              href="/login"
+              href="/marketplace"
               variant="contained"
               sx={{ mb: 2, py: 1.5 }}
             >
-              Login
+              MarketPlace
             </Button>
             <Button
               component={Link}
-              href="/signup"
+              href="/wallet"
               variant="contained"
               sx={{ py: 1.5 }}
             >
-              Sign Up
+              Wallet
             </Button>
           </Box>
         </Paper>

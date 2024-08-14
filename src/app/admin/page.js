@@ -5,7 +5,6 @@ import { ethers } from 'ethers';
 import { 
   Typography, 
   Button, 
-  TextField, 
   Box, 
   Container, 
   Paper,
@@ -16,54 +15,97 @@ import {
   TableHead,
   TableRow,
   IconButton,
+  CircularProgress,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 const ADMIN_ADDRESS = '0xE22B6D3e3Ccfe6dc83107453a46B6E88f7eeD348';
 
 export default function AdminPage() {
-  const [address, setAddress] = useState('');
-  const [isAdmin, setIsAdmin] = useState(false);
   const [users, setUsers] = useState([]);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    connectWallet();
+    checkAdminStatus();
   }, []);
 
-  const connectWallet = async () => {
+  const checkAdminStatus = async () => {
+    setIsLoading(true);
     if (typeof window.ethereum !== 'undefined') {
       try {
         await window.ethereum.request({ method: 'eth_requestAccounts' });
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         const signer = provider.getSigner();
         const address = await signer.getAddress();
-        setAddress(address);
-        setIsAdmin(address.toLowerCase() === ADMIN_ADDRESS.toLowerCase());
+        
         if (address.toLowerCase() === ADMIN_ADDRESS.toLowerCase()) {
+          setIsAdmin(true);
           fetchUsers();
+        } else {
+          setIsAdmin(false);
         }
       } catch (error) {
-        console.error('Error connecting to wallet:', error);
+        console.error('Error checking admin status:', error);
+        setIsAdmin(false);
       }
     } else {
       console.log('Please install MetaMask!');
+      setIsAdmin(false);
     }
+    setIsLoading(false);
   };
 
   const fetchUsers = async () => {
-    // In a real application, you would fetch this data from your backend
-    // This is just a mock-up
-    setUsers([
-      { id: 1, address: '0x123...', tokens: 100 },
-      { id: 2, address: '0x456...', tokens: 200 },
-      { id: 3, address: '0x789...', tokens: 300 },
-    ]);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/admin', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await response.json();
+      if (data.success) {
+        setUsers(data.data);
+      } else {
+        console.error('Error fetching users:', data.message);
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
   };
 
-  const handleDeleteUser = (userId) => {
-    // In a real application, you would call your backend to delete the user
-    setUsers(users.filter(user => user.id !== userId));
+  const handleDeleteUser = async (userId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/admin', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ userId }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setUsers(users.filter(user => user._id !== userId));
+      } else {
+        console.error('Error deleting user:', data.message);
+      }
+    } catch (error) {
+      console.error('Error deleting user:', error);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <Container maxWidth="sm">
+        <Box sx={{ mt: 8, display: 'flex', justifyContent: 'center' }}>
+          <CircularProgress />
+        </Box>
+      </Container>
+    );
+  }
 
   if (!isAdmin) {
     return (
@@ -86,27 +128,26 @@ export default function AdminPage() {
         <Typography variant="h4" component="h1" gutterBottom>
           Admin Dashboard
         </Typography>
-        <Typography variant="body1" gutterBottom>
-          Connected as: {address}
-        </Typography>
         <TableContainer component={Paper} sx={{ mt: 4 }}>
           <Table>
             <TableHead>
               <TableRow>
                 <TableCell>User Address</TableCell>
+                <TableCell>Name</TableCell>
                 <TableCell align="right">Tokens</TableCell>
                 <TableCell align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {users.map((user) => (
-                <TableRow key={user.id}>
+                <TableRow key={user._id}>
                   <TableCell component="th" scope="row">
                     {user.address}
                   </TableCell>
+                  <TableCell>{user.name}</TableCell>
                   <TableCell align="right">{user.tokens}</TableCell>
                   <TableCell align="right">
-                    <IconButton onClick={() => handleDeleteUser(user.id)} color="error">
+                    <IconButton onClick={() => handleDeleteUser(user._id)} color="error">
                       <DeleteIcon />
                     </IconButton>
                   </TableCell>

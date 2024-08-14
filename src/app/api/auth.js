@@ -1,31 +1,42 @@
+import dbConnect from '../../utils/dbConnect';
+import User from '../../models/User';
 import { ethers } from 'ethers';
-import UserAuthABI from '../../contracts/UserAuth.json';
+import jwt from 'jsonwebtoken';
 
-const provider = new ethers.providers.JsonRpcProvider(process.env.ETHEREUM_RPC_URL);
-const userAuthContract = new ethers.Contract(process.env.USER_AUTH_CONTRACT_ADDRESS, UserAuthABI, provider);
+dbConnect();
 
 export default async function handler(req, res) {
-  if (req.method === 'POST') {
-    const { action, address, passwordHash } = req.body;
+  const { method } = req;
 
-    try {
-      if (action === 'register') {
-        const tx = await userAuthContract.register(passwordHash);
-        await tx.wait();
-        res.status(200).json({ message: 'User registered successfully' });
-      } else if (action === 'login') {
-        const isLoggedIn = await userAuthContract.login(passwordHash);
-        res.status(200).json({ isLoggedIn });
-      } else if (action === 'isRegistered') {
-        const isRegistered = await userAuthContract.isUserRegistered();
-        res.status(200).json({ isRegistered });
-      } else {
-        res.status(400).json({ error: 'Invalid action' });
+  switch (method) {
+    case 'POST':
+      try {
+        const { action, address, name } = req.body;
+
+        if (action === 'signup') {
+          let user = await User.findOne({ address });
+          if (user) {
+            return res.status(400).json({ success: false, message: 'User already exists' });
+          }
+          user = await User.create({ address, name });
+          const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+          res.status(201).json({ success: true, token, user });
+        } else if (action === 'login') {
+          const user = await User.findOne({ address });
+          if (!user) {
+            return res.status(400).json({ success: false, message: 'User not found' });
+          }
+          const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+          res.status(200).json({ success: true, token, user });
+        } else {
+          res.status(400).json({ success: false, message: 'Invalid action' });
+        }
+      } catch (error) {
+        res.status(400).json({ success: false, message: error.message });
       }
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
-  } else {
-    res.status(405).json({ error: 'Method not allowed' });
+      break;
+    default:
+      res.status(400).json({ success: false });
+      break;
   }
 }

@@ -11,25 +11,31 @@ import Toolbar from '@mui/material/Toolbar';
 import Button from '@mui/material/Button';
 import Link from 'next/link';
 import { createTheme } from '@mui/material/styles';
+import { usePathname } from 'next/navigation';
 
-// Create a basic theme
 const theme = createTheme();
 
 export default function RootLayout({ children }) {
+  const pathname = usePathname();
+
+  const isHomePage = pathname === '/home';
+
   return (
     <html lang="en">
       <body>
         <ThemeProvider theme={theme}>
-          <AppBar position="static">
-            <Toolbar>
-              <Button color="inherit" component={Link} href="/">Home</Button>
-              <Button color="inherit" component={Link} href="/wallet">Wallet</Button>
-              <Button color="inherit" component={Link} href="/marketplace">Marketplace</Button>
-              <Button color="inherit" component={Link} href="/login">Login</Button>
-              <Button color="inherit" component={Link} href="/signup">Signup</Button>
-            </Toolbar>
-          </AppBar>
-          <main style={{ padding: '20px' }}>{children}</main>
+          {!isHomePage && (
+            <AppBar position="static">
+              <Toolbar>
+                <Button color="inherit" component={Link} href="/home">Home</Button>
+                <Button color="inherit" component={Link} href="/login">Login</Button>
+                <Button color="inherit" component={Link} href="/signup">Signup</Button>
+                <Button color="inherit" component={Link} href="/wallet">Wallet</Button>
+                <Button color="inherit" component={Link} href="/marketplace">Marketplace</Button>
+              </Toolbar>
+            </AppBar>
+          )}
+          <main style={{ padding: isHomePage ? 0 : '20px' }}>{children}</main>
         </ThemeProvider>
       </body>
     </html>

@@ -22,7 +22,7 @@ contract ZendeskNFT is ERC721, Ownable {
     event NFTCreated(uint256 tokenId, string name, uint256 price, address seller);
     event NFTSold(uint256 tokenId, address buyer, address seller, uint256 price);
 
-    constructor(address _tokenContract) ERC721("ZendeskNFT", "ZNFT") {
+    constructor(address _tokenContract) ERC721("ZendeskNFT", "ZNFT") Ownable(msg.sender) {
         tokenContract = IERC20(_tokenContract);
     }
 

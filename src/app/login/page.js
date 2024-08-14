@@ -1,19 +1,20 @@
 'use client'
 
 import React, { useState } from 'react';
-import { TextField, Button, Container, Typography, Box, Paper } from '@mui/material';
+import { Button, Container, Typography, Box, Paper, Alert } from '@mui/material';
 import { ethers } from 'ethers';
-import UserAuthABI from '../../../artifacts/contracts/UserAuth.sol/UserAuth.json';
-
-const CONTRACT_ADDRESS = 'YOUR_DEPLOYED_USERAUTH_CONTRACT_ADDRESS';
+import { useRouter } from 'next/navigation';
 
 export default function Login() {
-  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+  const router = useRouter();
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  const handleLogin = async () => {
     setError('');
+    setSuccess(false);
+
+    console.log('Starting login process');
 
     if (typeof window.ethereum === 'undefined') {
       setError('Please install MetaMask to use this feature.');
@@ -21,25 +22,22 @@ export default function Login() {
     }
 
     try {
-      await window.ethereum.request({ method: 'eth_requestAccounts' });
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
+      console.log('Requesting account access');
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
       
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, UserAuthABI.abi, signer);
-      
-      const passwordHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(password));
-      
-      const isLoggedIn = await contract.login(passwordHash);
-      
-      if (isLoggedIn) {
-        console.log('Login successful');
-        // Add logic for successful login (e.g., redirect or update state)
+      if (accounts.length > 0) {
+        setSuccess(true);
+        console.log('Wallet connected successfully');
+        // Store the connected address in localStorage or a state management solution
+        localStorage.setItem('connectedAddress', accounts[0]);
+        // Redirect to home page after successful connection
+        setTimeout(() => router.push('/home'), 2000);
       } else {
-        setError('Login failed. Please check your password and try again.');
+        setError('No accounts found. Please check your MetaMask connection.');
       }
     } catch (error) {
       console.error('Error during login:', error);
-      setError('An error occurred during login. Please try again.');
+      setError(`An error occurred during login: ${error.message}`);
     }
   };
 
@@ -47,33 +45,26 @@ export default function Login() {
     <Container component="main" maxWidth="xs">
       <Paper elevation={3} sx={{ mt: 8, p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <Typography component="h1" variant="h5" gutterBottom>
-          Login
+          Connect Your Wallet
         </Typography>
-        <Box component="form" onSubmit={handleLogin} noValidate sx={{ mt: 1, width: '100%' }}>
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            name="password"
-            label="Password"
-            type="password"
-            id="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+        <Box sx={{ mt: 1, width: '100%' }}>
           {error && (
-            <Typography color="error" variant="body2" sx={{ mt: 1 }}>
+            <Alert severity="error" sx={{ mt: 2 }}>
               {error}
-            </Typography>
+            </Alert>
+          )}
+          {success && (
+            <Alert severity="success" sx={{ mt: 2 }}>
+              Wallet connected successfully! Redirecting to home page...
+            </Alert>
           )}
           <Button
-            type="submit"
+            onClick={handleLogin}
             fullWidth
             variant="contained"
             sx={{ mt: 3, mb: 2, py: 1.5 }}
           >
-            Sign In
+            Connect Wallet
           </Button>
         </Box>
       </Paper>

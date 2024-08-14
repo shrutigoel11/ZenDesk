@@ -1,19 +1,25 @@
+'use client'
+
 import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 import './globals.css';
-import ThemeProvider from './ThemeProvider';
+import { ThemeProvider } from '@mui/material/styles';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Button from '@mui/material/Button';
 import Link from 'next/link';
+import { createTheme } from '@mui/material/styles';
+
+// Create a basic theme
+const theme = createTheme();
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
-        <ThemeProvider>
+        <ThemeProvider theme={theme}>
           <AppBar position="static">
             <Toolbar>
               <Button color="inherit" component={Link} href="/">Home</Button>

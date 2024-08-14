@@ -1,8 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
-import { alchemy } from '../utils/alchemy';
-import { getContract } from '../utils/contracts';
+import { alchemy } from '../../utils/alchemy';
+import { getContract } from '../../utils/contracts';
 import { 
   Typography, 
   Button, 

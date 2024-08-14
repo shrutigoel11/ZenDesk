@@ -2,8 +2,8 @@
 import { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { ethers } from 'ethers';
-import { alchemy } from '../utils/alchemy';
-import { getContract, createNFT, buyNFT, getNFTs } from '../utils/contracts';
+import { alchemy } from '../../utils/alchemy';
+import { getContract, createNFT, buyNFT, getNFTs } from '../../utils/contracts';
 import { 
   Typography, 
   Button, 

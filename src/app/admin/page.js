@@ -59,14 +59,17 @@ export default function AdminPage() {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem('token');
+      console.log('Token:', token); // Log the token
       const response = await fetch('/api/admin', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       const data = await response.json();
+      console.log('Response data:', data); // Log the entire response
       if (data.success) {
         setUsers(data.data);
+        console.log('Users set:', data.data); // Log the users data
       } else {
         console.error('Error fetching users:', data.message);
       }

@@ -21,22 +21,28 @@ const authenticateToken = (req, res) => {
 };
 
 export default async function handler(req, res) {
-  const { method } = req;
-  const user = authenticateToken(req, res);
-
-  if (!user || user.address.toLowerCase() !== ADMIN_ADDRESS.toLowerCase()) {
-    return res.status(403).json({ success: false, message: 'Access denied' });
-  }
-
-  switch (method) {
-    case 'GET':
-      try {
-        const users = await User.find({}).select('-__v');
-        res.status(200).json({ success: true, data: users });
-      } catch (error) {
-        res.status(400).json({ success: false, message: error.message });
-      }
-      break;
+    const { method } = req;
+    console.log('Request method:', method); // Log the request method
+  
+    const user = authenticateToken(req, res);
+    console.log('Authenticated user:', user); // Log the authenticated user
+  
+    if (!user || user.address.toLowerCase() !== ADMIN_ADDRESS.toLowerCase()) {
+      console.log('Access denied. User:', user, 'ADMIN_ADDRESS:', ADMIN_ADDRESS);
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+  
+    switch (method) {
+      case 'GET':
+        try {
+          const users = await User.find({}).select('-__v');
+          console.log('Users fetched:', users); // Log the fetched users
+          res.status(200).json({ success: true, data: users });
+        } catch (error) {
+          console.error('Error fetching users:', error);
+          res.status(400).json({ success: false, message: error.message });
+        }
+        break;
     case 'DELETE':
       try {
         const { userId } = req.body;

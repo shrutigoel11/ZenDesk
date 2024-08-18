@@ -4,7 +4,8 @@ import { ethers } from 'ethers';
 import jwt from 'jsonwebtoken';
 
 dbConnect();
-
+const token = jwt.sign({ id: user._id, address: user.address }, process.env.JWT_SECRET, { expiresIn: '1d' });
+res.status(200).json({ success: true, token, user });
 export default async function handler(req, res) {
   const { method } = req;
 
@@ -19,14 +20,14 @@ export default async function handler(req, res) {
             return res.status(400).json({ success: false, message: 'User already exists' });
           }
           user = await User.create({ address, name });
-          const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+          const token = jwt.sign({ id: user._id, address: user.address }, process.env.JWT_SECRET, { expiresIn: '1d' });
           res.status(201).json({ success: true, token, user });
         } else if (action === 'login') {
           const user = await User.findOne({ address });
           if (!user) {
             return res.status(400).json({ success: false, message: 'User not found' });
           }
-          const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+          const token = jwt.sign({ id: user._id, address: user.address }, process.env.JWT_SECRET, { expiresIn: '1d' });
           res.status(200).json({ success: true, token, user });
         } else {
           res.status(400).json({ success: false, message: 'Invalid action' });

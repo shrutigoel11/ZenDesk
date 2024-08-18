@@ -3,9 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import logo from '../logo.png';
+import { ethers } from 'ethers';
 
 const Container = styled(motion.div)`
   min-height: 100vh;
@@ -52,7 +53,7 @@ const NavLink = styled(motion.a)`
   &::after {
     content: '';
     position: absolute;
-    width: 0;
+    width: ${props => props.isActive ? '100%' : '0'};
     height: 2px;
     bottom: -5px;
     left: 0;
@@ -63,16 +64,6 @@ const NavLink = styled(motion.a)`
   &:hover::after {
     width: 100%;
   }
-`;
-
-const LogoutButton = styled(motion.button)`
-  background-color: #ff4d6d;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 5px;
-  font-weight: 700;
-  cursor: pointer;
 `;
 
 const MainContent = styled(motion.main)`
@@ -122,16 +113,27 @@ const itemVariants = {
 
 export default function HomePage() {
   const [address, setAddress] = useState('');
+  const [balance, setBalance] = useState('');
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const connectedAddress = localStorage.getItem('connectedAddress');
     if (connectedAddress) {
       setAddress(connectedAddress);
+      fetchBalance(connectedAddress);
     } else {
       router.push('/');
     }
   }, [router]);
+
+  const fetchBalance = async (address) => {
+    if (typeof window.ethereum !== 'undefined') {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const balance = await provider.getBalance(address);
+      setBalance(ethers.utils.formatEther(balance));
+    }
+  };
 
   const handleNavigation = (page) => {
     router.push(`/${page}`);
@@ -161,23 +163,62 @@ export default function HomePage() {
           <Image src={logo} alt="Zendesk" width={80} height={45} />
         </Logo>
         <Nav>
-          <NavLink onClick={() => handleNavigation('wallet')} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            Wallet
+          <NavLink 
+            onClick={() => handleNavigation('home')} 
+            whileHover={{ scale: 1.05 }} 
+            whileTap={{ scale: 0.95 }}
+            isActive={pathname === '/home'}
+          >
+            Home
           </NavLink>
-          <NavLink onClick={() => handleNavigation('marketplace')} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <NavLink 
+            onClick={() => handleNavigation('crypto')} 
+            whileHover={{ scale: 1.05 }} 
+            whileTap={{ scale: 0.95 }}
+            isActive={pathname === '/crypto'}
+          >
+            Crypto
+          </NavLink>
+          <NavLink 
+            onClick={() => handleNavigation('marketplace')} 
+            whileHover={{ scale: 1.05 }} 
+            whileTap={{ scale: 0.95 }}
+            isActive={pathname === '/marketplace'}
+          >
             Marketplace
           </NavLink>
-          <NavLink onClick={() => handleNavigation('tokens')} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <NavLink 
+            onClick={() => handleNavigation('sepolia')} 
+            whileHover={{ scale: 1.05 }} 
+            whileTap={{ scale: 0.95 }}
+            isActive={pathname === '/sepolia'}
+          >
+            Sepolia Testnet
+          </NavLink>
+          <NavLink 
+            onClick={() => handleNavigation('tokens')} 
+            whileHover={{ scale: 1.05 }} 
+            whileTap={{ scale: 0.95 }}
+            isActive={pathname === '/tokens'}
+          >
             Tokens
           </NavLink>
-          <LogoutButton onClick={handleLogout} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <NavLink 
+            onClick={handleLogout} 
+            whileHover={{ scale: 1.05 }} 
+            whileTap={{ scale: 0.95 }}
+          >
             Logout
-          </LogoutButton>
+          </NavLink>
         </Nav>
       </Header>
       <MainContent>
         <Title variants={itemVariants}>Welcome to ZenDesk</Title>
-        <Subtitle variants={itemVariants}>Connected Address: {address}</Subtitle>
+        <Subtitle variants={itemVariants}>
+          Connected Address: {address}
+          <br />
+          Available Balance: {balance} ETH
+        </Subtitle>
         <AnimatePresence>
           <Card
             variants={itemVariants}

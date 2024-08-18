@@ -46,9 +46,8 @@ const Header = styled(motion.header)`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 2rem;
+  padding: 1rem 3rem;
   position: fixed;
-  margin-top: 0rem;
   top: 0;
   left: 0;
   right: 0;
@@ -70,7 +69,10 @@ const Nav = styled.nav`
 const NavLink = styled(motion.a)`
   color: white;
   text-decoration: none;
-  font-weight: 300;
+  font-weight: 700;
+  font-family: 'Montserrat', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
   transition: color 0.3s ease;
   position: relative;
   &:hover {
@@ -199,13 +201,17 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [isConnecting, setIsConnecting] = useState(false);
   const { scrollYProgress } = useScroll();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const metamaskSectionRef = useRef(null);
   const [headerVisible, setHeaderVisible] = useState(true);
   const lastScrollY = useRef(0);
 
   useEffect(() => {
     setTimeout(() => setIsLoading(false), 3000); // Simulating load time
-
+    const connectedAddress = localStorage.getItem('connectedAddress');
+    if (connectedAddress) {
+      setIsLoggedIn(true);
+    }
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       if (currentScrollY > lastScrollY.current) {
@@ -225,7 +231,7 @@ export default function Home() {
   };
 
   const randomMovement = () => {
-    return Math.random() * 100 - 50; // Random value between -50 and 50
+    return Math.random() * 50 - 25; // Reduced range to -25 to 25 for smoother movement
   };
 
   const ball1X = useTransform(scrollYProgress, [0, 1], ['60%', `${60 + randomMovement()}%`]);
@@ -235,7 +241,7 @@ export default function Home() {
   const ball3X = useTransform(scrollYProgress, [0, 1], ['80%', `${80 + randomMovement()}%`]);
   const ball3Y = useTransform(scrollYProgress, [0, 1], ['40%', `${40 + randomMovement()}%`]);
 
-  const ballOpacity = useTransform(scrollYProgress, [0, 1], [0.6, 0.2]);
+  const ballOpacity = useTransform(scrollYProgress, [0, 1], [0.6, 0.4]);
 
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -260,6 +266,7 @@ export default function Home() {
       
       if (accounts.length > 0) {
         setSuccess(true);
+        setIsLoggedIn(true);
         console.log('Wallet connected successfully');
         localStorage.setItem('connectedAddress', accounts[0]);
         setTimeout(() => router.push('/home'), 2000);
@@ -278,7 +285,7 @@ export default function Home() {
     <>
       <Global
         styles={css`
-          @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;700&display=swap');
+          @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;700&family=Montserrat:wght@700&display=swap');
           body {
             margin: 0;
             padding: 0;
@@ -331,12 +338,12 @@ export default function Home() {
       </AnimatePresence>
       <Header
         initial={{ y: 0 }}
-        animate={{ y: headerVisible ? 0 : -100 }}
+        animate={{ y: 0 }}
         transition={{ duration: 0.3 }}
       >
         <Logo>
-  <Image src={logo} alt="Grabient Logo" width={160} height={35} />
-</Logo>
+          <Image src={logo} alt="Zendesk" width={80} height={45} />
+        </Logo>
         <Nav>
           {['Explore', 'News', 'Developers', 'Designers'].map((item) => (
             <NavLink
@@ -362,14 +369,14 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 3.2 }}
             >
-              Grabient
+              ZenDesk.io
             </Title>
             <Subtitle
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 3.4 }}
             >
-              Hand crafting unique world most beautiful gradients for
+              A bunch of Collectable NFTs Hand crafting unique world most beautiful gradients for
               your personal as well as commercial projects. For a low
               cost of zero dollars and
             </Subtitle>
@@ -400,18 +407,17 @@ export default function Home() {
           >
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
           </MetamaskMessage>
-          <Button
-            initial={{ opacity: 0, y: 20 }}
-            onClick={handleLogin}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.2 }}
-            viewport={{ once: true }}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            disabled={isConnecting}
-          >
-            {isConnecting ? <LoadingSpinner /> : "Connect with MetaMask"}
-          </Button>
+           <Button
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: isLoggedIn ? 0 : 1, y: 0 }}
+        transition={{ duration: 1, delay: 0.2 }}
+        onClick={handleLogin}
+        whileHover={{ scale: 1.03 }}
+        whileTap={{ scale: 0.97 }}
+        disabled={isConnecting || isLoggedIn}
+      >
+        {isConnecting ? <LoadingSpinner /> : isLoggedIn ? "Connected" : "Connect with MetaMask"}
+      </Button>
         </MetamaskSection>
       </Container>
     </>

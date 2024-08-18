@@ -1,118 +1,144 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import { Button, Container, Typography, Box } from '@mui/material';
-import Link from 'next/link';
-import { ethers } from 'ethers';
-import UserAuthABI from '../../../artifacts/contracts/UserAuth.sol/UserAuth.json';
-import { motion } from 'framer-motion';
 import styled from '@emotion/styled';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { Sphere, MeshDistortMaterial } from '@react-three/drei';
+import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import logo from '../logo.png';
 
-const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_USERAUTH_CONTRACT_ADDRESS;
-
-const Background = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: #0a2a2a;
-  background-image: 
-    linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
-  background-size: 20px 20px;
-  z-index: -1;
+const Container = styled.div`
+  min-height: 100vh;
+  color: white;
+  font-family: 'Poppins', sans-serif;
+  position: relative;
+  z-index: 2;
 `;
 
-const StyledButton = styled(Button)`
-  background: rgba(0, 255, 255, 0.1);
-  color: #00ffff;
-  border: 1px solid #00ffff;
-  padding: 8px 16px;
-  font-size: 14px;
+const Header = styled.header`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 3rem;
+  background-color: rgba(10, 0, 21, 0.8);
+  backdrop-filter: blur(10px);
+`;
+
+const Logo = styled.div`
+  font-size: 1.5rem;
+  font-weight: bold;
+`;
+
+const Nav = styled.nav`
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+`;
+
+const NavLink = styled(motion.a)`
+  color: white;
+  text-decoration: none;
+  font-weight: 700;
+  font-family: 'Montserrat', sans-serif;
   text-transform: uppercase;
-  letter-spacing: 2px;
-  transition: all 0.3s ease;
-
-  &:hover {
-    background: rgba(0, 255, 255, 0.2);
-  }
+  letter-spacing: 1px;
+  cursor: pointer;
 `;
 
-const AnimatedSphere = () => {
-  useFrame((state) => {
-    state.camera.position.x = Math.sin(state.clock.elapsedTime * 0.3) * 4
-    state.camera.position.y = Math.cos(state.clock.elapsedTime * 0.3) * 4
-    state.camera.lookAt(0, 0, 0)
-  })
+const LogoutButton = styled(motion.button)`
+  background-color: #ff4d6d;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  font-weight: 700;
+  cursor: pointer;
+`;
 
-  return (
-    <Sphere args={[1, 64, 64]}>
-      <MeshDistortMaterial
-        color="#00ffff"
-        attach="material"
-        distort={0.3}
-        speed={1.5}
-        roughness={0}
-        metalness={0.8}
-      />
-    </Sphere>
-  )
-}
+const MainContent = styled.main`
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+`;
 
-export default function Home() {
-  const [name, setName] = useState('');
+const Title = styled.h1`
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  background: linear-gradient(45deg, #ff4d6d, #4d79ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+`;
+
+const Subtitle = styled.p`
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+  color: rgba(255, 255, 255, 0.8);
+`;
+
+const Card = styled(motion.div)`
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 10px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+`;
+
+export default function HomePage() {
+  const [address, setAddress] = useState('');
+  const router = useRouter();
 
   useEffect(() => {
-    const checkLoginStatus = async () => {
-      if (typeof window.ethereum !== 'undefined') {
-        try {
-          await window.ethereum.request({ method: 'eth_requestAccounts' });
-          const provider = new ethers.providers.Web3Provider(window.ethereum);
-          const signer = provider.getSigner();
-          const contract = new ethers.Contract(CONTRACT_ADDRESS, UserAuthABI.abi, signer);
+    const connectedAddress = localStorage.getItem('connectedAddress');
+    if (connectedAddress) {
+      setAddress(connectedAddress);
+    } else {
+      router.push('/');
+    }
+  }, [router]);
 
-          const isRegistered = await contract.isUserRegistered();
-          if (isRegistered) {
-            const userName = await contract.getUserName();
-            setName(userName);
-          }
-        } catch (error) {
-          console.error('Error checking login status:', error);
-        }
-      }
-    };
+  const handleNavigation = (page) => {
+    router.push(`/${page}`);
+  };
 
-    checkLoginStatus();
-  }, []);
+  const handleLogout = () => {
+    localStorage.removeItem('connectedAddress');
+    router.push('/');
+  };
 
   return (
-    <>
-      <Background />
-      <Container maxWidth="lg" sx={{ height: '100vh', display: 'flex', alignItems: 'center' }}>
-        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Box>
-            <Typography variant="h6" sx={{ color: '#00ffff', mb: 1 }}>
-              Welcome
-            </Typography>
-            <Typography variant="h2" sx={{ color: '#ffffff', fontWeight: 'bold', mb: 4 }}>
-              SOLARIN<br />HAS<br />ARRIVED
-            </Typography>
-            <StyledButton variant="outlined">
-              Discover
-            </StyledButton>
-          </Box>
-          <Box sx={{ width: '50%', height: '500px' }}>
-            <Canvas>
-              <ambientLight intensity={0.5} />
-              <pointLight position={[10, 10, 10]} />
-              <AnimatedSphere />
-            </Canvas>
-          </Box>
-        </Box>
-      </Container>
-    </>
+    <Container>
+      <Header>
+        <Logo>
+          <Image src={logo} alt="Zendesk" width={80} height={45} />
+        </Logo>
+        <Nav>
+          <NavLink onClick={() => handleNavigation('wallet')} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            Wallet
+          </NavLink>
+          <NavLink onClick={() => handleNavigation('marketplace')} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            Marketplace
+          </NavLink>
+          <NavLink onClick={() => handleNavigation('tokens')} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            Tokens
+          </NavLink>
+          <LogoutButton onClick={handleLogout} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            Logout
+          </LogoutButton>
+        </Nav>
+      </Header>
+      <MainContent>
+        <Title>Welcome to ZenDesk</Title>
+        <Subtitle>Connected Address: {address}</Subtitle>
+        <Card
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <h2>Your Dashboard</h2>
+          <p>Here you can view your NFTs, manage your wallet, and explore the marketplace.</p>
+        </Card>
+        {/* Add more content cards here */}
+      </MainContent>
+    </Container>
   );
 }

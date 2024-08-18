@@ -1,183 +1,112 @@
 'use client'
 
-import { useState, useEffect } from 'react';
-import '@fontsource/roboto/300.css';
-import '@fontsource/roboto/400.css';
-import '@fontsource/roboto/500.css';
-import '@fontsource/roboto/700.css';
-import './globals.css';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { AppBar, Toolbar, Button, Typography, Box, Drawer, List, ListItem, ListItemText, ListItemIcon, Container, CssBaseline, IconButton } from '@mui/material';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import HomeIcon from '@mui/icons-material/Home';
-import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
-import TokenIcon from '@mui/icons-material/Token';
-import StorefrontIcon from '@mui/icons-material/Storefront';
-import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
-import MenuIcon from '@mui/icons-material/Menu';
+import React, { useEffect, useState } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import styled from '@emotion/styled';
+import { Global, css } from '@emotion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#3f51b5',
-    },
-    secondary: {
-      main: '#f50057',
-    },
-    background: {
-      default: '#ffffff',
-    },
-  },
-});
+const LayoutContainer = styled.div`
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0a0015 0%, #1a0b2e 100%);
+  color: white;
+`;
 
-const drawerWidth = 240;
+const GradientOverlay = styled(motion.div)`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(76, 0, 255, 0.1) 0%, rgba(76, 0, 255, 0) 70%);
+  pointer-events: none;
+  z-index: 1;
+`;
+
+const NotLoggedInMessage = styled(motion.div)`
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  padding: 2rem;
+  border-radius: 10px;
+  text-align: center;
+  z-index: 1000;
+`;
 
 export default function RootLayout({ children }) {
-  const pathname = usePathname();
-  const [name, setName] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [showMessage, setShowMessage] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    const checkLoginStatus = async () => {
-      const address = localStorage.getItem('userAddress');
-      if (address) {
-        const response = await fetch('/api/auth', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'isRegistered', address }),
-        });
-        const data = await response.json();
-        setIsLoggedIn(data.isRegistered);
-        if (data.isRegistered) {
-          setName(address.slice(0, 6) + '...' + address.slice(-4));
-        }
+    const checkLoginStatus = () => {
+      const connectedAddress = localStorage.getItem('connectedAddress');
+      setIsLoggedIn(!!connectedAddress);
+
+      if (connectedAddress && pathname === '/') {
+        router.push('/home');
+      } else if (!connectedAddress && pathname !== '/') {
+        setShowMessage(true);
+        setTimeout(() => {
+          setShowMessage(false);
+          router.push('/');
+        }, 3000);
       }
     };
+
     checkLoginStatus();
-  }, []);
 
-  const isHomePage = pathname === '/home';
-  const isAdminPage = pathname === '/admin';
-  const showDrawer = ['/wallet', '/marketplace', '/get-tokens'].includes(pathname);
+    window.addEventListener('storage', checkLoginStatus);
 
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
-  };
-
-  const drawerContent = (
-    <Box sx={{ mt: 2 }}>
-      <List>
-        {[
-          { text: 'Home', icon: <HomeIcon />, href: '/home' },
-          { text: 'Wallet', icon: <AccountBalanceWalletIcon />, href: '/wallet' },
-          { text: 'Get Tokens', icon: <TokenIcon />, href: '/get-tokens' },
-          { text: 'Marketplace', icon: <StorefrontIcon />, href: '/marketplace' },
-        ].map((item) => (
-          <ListItem button key={item.text} component={Link} href={item.href}>
-            <ListItemIcon>{item.icon}</ListItemIcon>
-            <ListItemText primary={item.text} />
-          </ListItem>
-        ))}
-      </List>
-    </Box>
-  );
+    return () => {
+      window.removeEventListener('storage', checkLoginStatus);
+    };
+  }, [router, pathname]);
 
   return (
     <html lang="en">
+      <head>
+        <title>ZenDesk</title>
+        <meta name="description" content="ZenDesk - Your NFT Marketplace" />
+      </head>
       <body>
-        <ThemeProvider theme={theme}>
-          <CssBaseline />
-          <Box sx={{ display: 'flex', minHeight: '100vh' }}>
-            {/* <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
-              <Toolbar>
-                {showDrawer && (
-                  <IconButton
-                    color="inherit"
-                    aria-label="open drawer"
-                    edge="start"
-                    onClick={handleDrawerToggle}
-                    sx={{ mr: 2, display: { sm: 'none' } }}
-                  >
-                    <MenuIcon />
-                  </IconButton>
-                )}
-                <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-                  {isLoggedIn ? `Welcome, ${name}` : 'DApp Platform'}
-                </Typography>
-                {!isLoggedIn && (
-                  <>
-                    <Button color="inherit" component={Link} href="/login">Login</Button>
-                    <Button color="inherit" component={Link} href="/signup">Signup</Button>
-                  </>
-                )}
-              </Toolbar> */}
-            {/* </AppBar> */}
-            {showDrawer && (
-              <Box
-                component="nav"
-                sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
+        <Global
+          styles={css`
+            @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;700&family=Montserrat:wght@700&display=swap');
+            
+            body {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+              font-family: 'Poppins', sans-serif;
+            }
+          `}
+        />
+        <LayoutContainer>
+          <GradientOverlay 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 2 }}
+          />
+          {children}
+          <AnimatePresence>
+            {showMessage && (
+              <NotLoggedInMessage
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
               >
-                <Drawer
-                  variant="temporary"
-                  open={mobileOpen}
-                  onClose={handleDrawerToggle}
-                  ModalProps={{
-                    keepMounted: true, // Better open performance on mobile.
-                  }}
-                  sx={{
-                    display: { xs: 'block', sm: 'none' },
-                    '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
-                  }}
-                >
-                  {drawerContent}
-                </Drawer>
-                <Drawer
-                  variant="permanent"
-                  sx={{
-                    display: { xs: 'none', sm: 'block' },
-                    '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
-                  }}
-                  open
-                >
-                  {drawerContent}
-                </Drawer>
-              </Box>
+                <h2>You must be logged in to access this page</h2>
+                <p>Redirecting to login...</p>
+              </NotLoggedInMessage>
             )}
-            <Box component="main" sx={{ flexGrow: 1, width: { sm: `calc(100% - ${drawerWidth}px)` }, display: 'flex', flexDirection: 'column' }}>
-              <Toolbar />
-              <Container maxWidth={false} sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', p: 0 }}>
-                {isHomePage ? (
-                  <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                    {isLoggedIn && (
-                      <Box sx={{ position: 'absolute', top: 80, right: 24 }}>
-                        <Button component={Link} href="/admin" startIcon={<AdminPanelSettingsIcon />} variant="outlined">
-                          Admin
-                        </Button>
-                      </Box>
-                    )}
-                    <Typography variant="h3" component="h1" gutterBottom>
-                      Hello, {isLoggedIn ? name : 'Guest'}!
-                    </Typography>
-                    <Box sx={{ mt: 4 }}>
-                      <Button component={Link} href="/wallet" variant="contained" sx={{ m: 1 }}>
-                        Wallet
-                      </Button>
-                      <Button component={Link} href="/marketplace" variant="contained" sx={{ m: 1 }}>
-                        Marketplace
-                      </Button>
-                    </Box>
-                  </Box>
-                ) : (
-                  <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                    {children}
-                  </Box>
-                )}
-              </Container>
-            </Box>
-          </Box>
-        </ThemeProvider>
+          </AnimatePresence>
+        </LayoutContainer>
       </body>
     </html>
   );

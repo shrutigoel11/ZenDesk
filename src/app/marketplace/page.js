@@ -9,7 +9,7 @@ import Image from 'next/image';
 import logo from '../logo.png';
 
 
-const IPFSClient = dynamic(() => import('ipfs-http-client').then((mod) => mod.create), { ssr: false });
+const IPFSHttpClient = dynamic(() => import('ipfs-http-client'), { ssr: false });
 const Web3 = dynamic(() => import('web3'), { ssr: false });
 
 const projectId = process.env.NEXT_PUBLIC_INFURA_PROJECT_ID;
@@ -315,11 +315,12 @@ const [ipfsClient, setIpfsClient] = useState(null);
 
 useEffect(() => {
   const initIPFSClient = async () => {
+    const { create } = await IPFSHttpClient;
     const projectId = process.env.NEXT_PUBLIC_INFURA_PROJECT_ID;
     const projectSecret = process.env.NEXT_PUBLIC_INFURA_PROJECT_SECRET;
     const auth = 'Basic ' + Buffer.from(projectId + ':' + projectSecret).toString('base64');
 
-    const client = await IPFSClient({
+    const client = create({
       host: 'ipfs.infura.io',
       port: 5001,
       protocol: 'https',

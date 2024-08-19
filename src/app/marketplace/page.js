@@ -379,12 +379,12 @@ export default function MarketplacePage() {
           >
             Home
           </NavLink>
-          <NavLink 
+          {/* <NavLink 
             onClick={() => router.push('/crypto')} 
             isActive={pathname === '/crypto'}
           >
             Crypto
-          </NavLink>
+          </NavLink> */}
           <NavLink 
             onClick={() => router.push('/marketplace')} 
             isActive={pathname === '/marketplace'}

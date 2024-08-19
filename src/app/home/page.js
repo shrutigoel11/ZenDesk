@@ -213,7 +213,7 @@ export default function HomePage() {
         </Nav>
       </Header>
       <MainContent>
-        <Title variants={itemVariants}>Welcome to ZenDesk</Title>
+        <Title variants={itemVariants}>Welcome to ZenDesk.io</Title>
         <Subtitle variants={itemVariants}>
           Connected Address: {address}
           <br />

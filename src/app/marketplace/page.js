@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import styled from '@emotion/styled';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import logo from '../logo.png';
@@ -162,71 +162,6 @@ const Button = styled(motion.button)`
   }
 `;
 
-const NFTGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 2rem;
-`;
-
-const NFTCard = styled(motion.div)`
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border-radius: 10px;
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  transition: all 0.3s ease;
-
-  &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
-  }
-`;
-
-const NFTImage = styled.img`
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-  border-radius: 5px;
-  margin-bottom: 1rem;
-`;
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: { 
-    opacity: 1,
-    transition: { 
-      duration: 0.5, 
-      when: "beforeChildren",
-      staggerChildren: 0.2
-    }
-  }
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 }
-};
-
-const SearchBar = styled.input`
-  width: 100%;
-  padding: 0.75rem;
-  border-radius: 5px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  font-size: 1rem;
-  margin-bottom: 1rem;
-  transition: all 0.3s ease;
-
-  &:focus {
-    outline: none;
-    border-color: #ff4d6d;
-    box-shadow: 0 0 0 2px rgba(255, 77, 109, 0.2);
-  }
-`;
-
 const Select = styled.select`
   padding: 0.75rem;
   border-radius: 5px;
@@ -271,54 +206,48 @@ const FileInputLabel = styled.label`
   }
 `;
 
-const UserNFTsSection = styled(Card)`
-  margin-bottom: 2rem;
-`;
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: { 
+    opacity: 1,
+    transition: { 
+      duration: 0.5, 
+      when: "beforeChildren",
+      staggerChildren: 0.2
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 }
+};
 
 export default function MarketplacePage() {
-  const [nfts, setNfts] = useState([]);
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
   const [blockchain, setBlockchain] = useState('ETH');
-  const [searchTerm, setSearchTerm] = useState('');
   const [file, setFile] = useState(null);
-  const [userNFTs, setUserNFTs] = useState([]);
   const router = useRouter();
   const pathname = usePathname();
 
   const handleCreateNFT = async (e) => {
     e.preventDefault();
     try {
-      const newNFT = {
-        id: userNFTs.length + 1,
-        name,
-        price,
-        blockchain,
-        image: URL.createObjectURL(file),
-      };
-      setUserNFTs([...userNFTs, newNFT]);
+      // Implement NFT creation logic here
+      console.log('Creating NFT:', { name, price, blockchain, file });
+      alert("NFT created successfully!");
 
       // Reset form
       setName('');
       setPrice('');
       setBlockchain('ETH');
       setFile(null);
-
-      alert("NFT created successfully!");
     } catch (error) {
       console.error('Error creating NFT:', error);
       alert("Error creating NFT. Please try again.");
     }
   };
-
-  const handleBuyNFT = async (id) => {
-    // Implement NFT purchase logic here
-    console.log('Buying NFT:', id);
-  };
-
-  const filteredNFTs = nfts.filter(nft => 
-    nft.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   return (
     <Container
@@ -380,27 +309,6 @@ export default function MarketplacePage() {
       <MainContent>
         <Title variants={itemVariants}>NFT Marketplace</Title>
         
-        <UserNFTsSection variants={itemVariants}>
-          <h2>Your Created NFTs</h2>
-          <NFTGrid>
-            <AnimatePresence>
-              {userNFTs.map((nft) => (
-                <NFTCard
-                  key={nft.id}
-                  variants={itemVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit={{ opacity: 0, scale: 0.5 }}
-                >
-                  <NFTImage src={nft.image} alt={nft.name} />
-                  <h3>{nft.name}</h3>
-                  <p>Price: {nft.price} {nft.blockchain}</p>
-                </NFTCard>
-              ))}
-            </AnimatePresence>
-          </NFTGrid>
-        </UserNFTsSection>
-
         <Card variants={itemVariants}>
           <h2>Create NFT</h2>
           <Form onSubmit={handleCreateNFT}>
@@ -454,39 +362,6 @@ export default function MarketplacePage() {
               Create NFT
             </Button>
           </Form>
-        </Card>
-        
-        <Card variants={itemVariants}>
-          <h2>Available NFTs</h2>
-          <SearchBar 
-            type="text" 
-            placeholder="Search NFTs..." 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <NFTGrid>
-            <AnimatePresence>
-              {filteredNFTs.map((nft) => (
-                <NFTCard
-                  key={nft.id}
-                  variants={itemVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit={{ opacity: 0, scale: 0.5 }}
-                >
-                  <NFTImage src={nft.image_url} alt={nft.name} />
-                  <h3>{nft.name}</h3>
-                  <p>Price: {nft.price} ETH</p>
-                  <Button onClick={() => handleBuyNFT(nft.id)}>
-                    Buy NFT
-                  </Button>
-                </NFTCard>
-              ))}
-            </AnimatePresence>
-          </NFTGrid>
-          {/* <Button onClick={handleLoadMore} style={{ marginTop: '2rem' }}>
-            Load More
-          </Button> */}
         </Card>
       </MainContent>
     </Container>

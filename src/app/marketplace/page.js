@@ -484,9 +484,9 @@ export default function MarketplacePage() {
               ))}
             </AnimatePresence>
           </NFTGrid>
-          <Button onClick={handleLoadMore} style={{ marginTop: '2rem' }}>
+          {/* <Button onClick={handleLoadMore} style={{ marginTop: '2rem' }}>
             Load More
-          </Button>
+          </Button> */}
         </Card>
       </MainContent>
     </Container>

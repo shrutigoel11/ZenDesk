@@ -1,16 +1,13 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
 import styled from '@emotion/styled';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import logo from '../logo.png';
-
-
-const IPFSHttpClient = dynamic(() => import('ipfs-http-client'), { ssr: false });
-const Web3 = dynamic(() => import('web3'), { ssr: false });
+import { create } from 'ipfs-http-client';
+import Web3 from 'web3';
 
 const projectId = process.env.NEXT_PUBLIC_INFURA_PROJECT_ID;
 const projectSecret = process.env.NEXT_PUBLIC_INFURA_PROJECT_SECRET;  
@@ -299,41 +296,14 @@ const generateHash = (name, price, blockchain, file) => {
 };
 
 const storeOnIPFS = async (data) => {
-  if (!ipfsClient) {
-    throw new Error('IPFS client not initialized');
-  }
   try {
-    const added = await ipfsClient.add(JSON.stringify(data));
+    const added = await client.add(JSON.stringify(data));
     return added.path;
   } catch (error) {
     console.error('Error adding file to IPFS:', error);
     throw error;
   }
 };
-
-const [ipfsClient, setIpfsClient] = useState(null);
-
-useEffect(() => {
-  const initIPFSClient = async () => {
-    const { create } = await IPFSHttpClient;
-    const projectId = process.env.NEXT_PUBLIC_INFURA_PROJECT_ID;
-    const projectSecret = process.env.NEXT_PUBLIC_INFURA_PROJECT_SECRET;
-    const auth = 'Basic ' + Buffer.from(projectId + ':' + projectSecret).toString('base64');
-
-    const client = create({
-      host: 'ipfs.infura.io',
-      port: 5001,
-      protocol: 'https',
-      headers: {
-        authorization: auth,
-      },
-    });
-
-    setIpfsClient(client);
-  };
-
-  initIPFSClient();
-}, []);
 
 export default function MarketplacePage() {
   const [nfts, setNfts] = useState([]);
@@ -402,9 +372,9 @@ export default function MarketplacePage() {
     try {
       const fileBuffer = await file.arrayBuffer();
       const fileAdded = await client.add(fileBuffer);
-      const fileUrl = `https://ipfs.io/ipfs/${fileAdded.path}`;
+      // const fileUrl = `https://ipfs.io/ipfs/${fileAdded.path}`;
 
-      const hash = generateHash(name, price, blockchain, file);
+      // const hash = generateHash(name, price, blockchain, file);
       const metadata = {
         name,
         price,
@@ -413,7 +383,7 @@ export default function MarketplacePage() {
         hash,
         seller: account,
       };
-      const metadataUrl = await storeOnIPFS(metadata);
+      // const metadataUrl = await storeOnIPFS(metadata);
 
       const newNFT = {
         id: userNFTs.length + 1,

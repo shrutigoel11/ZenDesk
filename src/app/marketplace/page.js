@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import styled from '@emotion/styled';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, usePathname } from 'next/navigation';
@@ -282,38 +282,9 @@ export default function MarketplacePage() {
   const [blockchain, setBlockchain] = useState('ETH');
   const [searchTerm, setSearchTerm] = useState('');
   const [file, setFile] = useState(null);
-  const [page, setPage] = useState(1);
   const [userNFTs, setUserNFTs] = useState([]);
   const router = useRouter();
   const pathname = usePathname();
-
-  useEffect(() => {
-    fetchNFTs();
-  }, [page]);
-
-  const fetchNFTs = async () => {
-    try {
-      console.log('Fetching NFTs...');
-      const response = await fetch('/api/opensea-nfts');
-      console.log('Response status:', response.status);
-      const data = await response.json();
-      console.log('Fetched data:', data);
-      
-      if (data.orders) {
-        const formattedNFTs = data.orders.map((order, index) => ({
-          id: `${order.order_hash}-${index}-${page}`,
-          name: `${order.maker_asset_bundle.assets[0].name} #${index + 1}`,
-          image_url: order.maker_asset_bundle.assets[0].image_url,
-          price: order.current_price ? (parseFloat(order.current_price) / 1e18 * (Math.random() * 0.5 + 0.75)).toFixed(4) : 'N/A'
-        }));
-        setNfts(prevNfts => [...prevNfts, ...formattedNFTs]);
-      } else {
-        console.error('Unexpected data structure:', data);
-      }
-    } catch (error) {
-      console.error('Error fetching NFTs:', error);
-    }
-  };
 
   const handleCreateNFT = async (e) => {
     e.preventDefault();
@@ -343,10 +314,6 @@ export default function MarketplacePage() {
   const handleBuyNFT = async (id) => {
     // Implement NFT purchase logic here
     console.log('Buying NFT:', id);
-  };
-
-  const handleLoadMore = () => {
-    setPage(prevPage => prevPage + 1);
   };
 
   const filteredNFTs = nfts.filter(nft => 
@@ -379,12 +346,12 @@ export default function MarketplacePage() {
           >
             Home
           </NavLink>
-          {/* <NavLink 
+          <NavLink 
             onClick={() => router.push('/crypto')} 
             isActive={pathname === '/crypto'}
           >
             Crypto
-          </NavLink> */}
+          </NavLink>
           <NavLink 
             onClick={() => router.push('/marketplace')} 
             isActive={pathname === '/marketplace'}

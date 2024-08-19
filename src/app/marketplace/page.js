@@ -6,6 +6,21 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import logo from '../logo.png';
+import { create } from 'ipfs-http-client';
+import Web3 from 'web3';
+
+const projectId = process.env.NEXT_PUBLIC_INFURA_PROJECT_ID;
+const projectSecret = process.env.NEXT_PUBLIC_INFURA_PROJECT_SECRET;
+const auth = 'Basic ' + Buffer.from(projectId + ':' + projectSecret).toString('base64');
+
+const client = create({
+  host: 'ipfs.infura.io',
+  port: 5001,
+  protocol: 'https',
+  headers: {
+    authorization: auth,
+  },
+});
 
 const Container = styled(motion.div)`
   min-height: 100vh;
@@ -138,9 +153,27 @@ const Button = styled(motion.button)`
   font-size: 1rem;
   cursor: pointer;
   transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 70%);
+    transform: scale(0);
+    transition: transform 0.3s ease-out;
+  }
+
+  &:hover::before {
+    transform: scale(1);
+  }
 
   &:hover {
-    background-color: #ff3057;
+    box-shadow: 0 0 15px rgba(255, 77, 109, 0.6);
   }
 `;
 
@@ -184,11 +217,6 @@ const containerVariants = {
       staggerChildren: 0.2
     }
   }
-};
-
-const handleLogout = () => {
-  localStorage.removeItem('connectedAddress');
-  router.push('/');
 };
 
 const itemVariants = {
@@ -258,6 +286,25 @@ const FileInputLabel = styled.label`
   }
 `;
 
+const UserNFTsSection = styled(Card)`
+  margin-bottom: 2rem;
+`;
+
+const generateHash = (name, price, blockchain, file) => {
+  const data = `${name}-${price}-${blockchain}-${file.name}-${Date.now()}`;
+  return btoa(data);
+};
+
+const storeOnIPFS = async (data) => {
+  try {
+    const added = await client.add(JSON.stringify(data));
+    return added.path;
+  } catch (error) {
+    console.error('Error adding file to IPFS:', error);
+    throw error;
+  }
+};
+
 export default function MarketplacePage() {
   const [nfts, setNfts] = useState([]);
   const [name, setName] = useState('');
@@ -266,12 +313,30 @@ export default function MarketplacePage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [file, setFile] = useState(null);
   const [page, setPage] = useState(1);
+  const [userNFTs, setUserNFTs] = useState([]);
+  const [web3, setWeb3] = useState(null);
+  const [account, setAccount] = useState(null);
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
     fetchNFTs();
+    initWeb3();
   }, [page]);
+
+  const initWeb3 = async () => {
+    if (window.ethereum) {
+      const web3Instance = new Web3(window.ethereum);
+      setWeb3(web3Instance);
+      try {
+        await window.ethereum.enable();
+        const accounts = await web3Instance.eth.getAccounts();
+        setAccount(accounts[0]);
+      } catch (error) {
+        console.error("User denied account access");
+      }
+    }
+  };
 
   const fetchNFTs = async () => {
     try {
@@ -299,10 +364,50 @@ export default function MarketplacePage() {
 
   const handleCreateNFT = async (e) => {
     e.preventDefault();
-    // Implement NFT creation logic here
-    console.log('Creating NFT:', { name, price, blockchain });
-    // After creation, you might want to refresh the NFT list
-    fetchNFTs();
+    if (!web3 || !account) {
+      alert("Please connect your wallet first");
+      return;
+    }
+
+    try {
+      const fileBuffer = await file.arrayBuffer();
+      const fileAdded = await client.add(fileBuffer);
+      const fileUrl = `https://ipfs.io/ipfs/${fileAdded.path}`;
+
+      const hash = generateHash(name, price, blockchain, file);
+      const metadata = {
+        name,
+        price,
+        blockchain,
+        image: fileUrl,
+        hash,
+        seller: account,
+      };
+      const metadataUrl = await storeOnIPFS(metadata);
+
+      const newNFT = {
+        id: userNFTs.length + 1,
+        name,
+        price,
+        blockchain,
+        image: URL.createObjectURL(file),
+        ipfsHash: metadataUrl,
+        hash,
+        seller: account,
+      };
+      setUserNFTs([...userNFTs, newNFT]);
+
+      // Reset form
+      setName('');
+      setPrice('');
+      setBlockchain('ETH');
+      setFile(null);
+
+      alert("NFT created successfully!");
+    } catch (error) {
+      console.error('Error creating NFT:', error);
+      alert("Error creating NFT. Please try again.");
+    }
   };
 
   const handleBuyNFT = async (id) => {
@@ -340,48 +445,36 @@ export default function MarketplacePage() {
         <Nav>
           <NavLink 
             onClick={() => router.push('/home')} 
-            whileHover={{ scale: 1.05 }} 
-            whileTap={{ scale: 0.95 }}
             isActive={pathname === '/home'}
           >
             Home
           </NavLink>
           <NavLink 
             onClick={() => router.push('/crypto')} 
-            whileHover={{ scale: 1.05 }} 
-            whileTap={{ scale: 0.95 }}
             isActive={pathname === '/crypto'}
           >
             Crypto
           </NavLink>
           <NavLink 
             onClick={() => router.push('/marketplace')} 
-            whileHover={{ scale: 1.05 }} 
-            whileTap={{ scale: 0.95 }}
             isActive={pathname === '/marketplace'}
           >
             Marketplace
           </NavLink>
           <NavLink 
             onClick={() => router.push('/sepolia')} 
-            whileHover={{ scale: 1.05 }} 
-            whileTap={{ scale: 0.95 }}
             isActive={pathname === '/sepolia'}
           >
             Sepolia Testnet
           </NavLink>
           <NavLink 
             onClick={() => router.push('/tokens')} 
-            whileHover={{ scale: 1.05 }} 
-            whileTap={{ scale: 0.95 }}
             isActive={pathname === '/tokens'}
           >
             Tokens
           </NavLink>
           <NavLink 
             onClick={() => router.push('/')} 
-            whileHover={{ scale: 1.05 }} 
-            whileTap={{ scale: 0.95 }}
           >
             Logout
           </NavLink>
@@ -389,6 +482,31 @@ export default function MarketplacePage() {
       </Header>
       <MainContent>
         <Title variants={itemVariants}>NFT Marketplace</Title>
+        
+        <UserNFTsSection variants={itemVariants}>
+          <h2>Your Created NFTs</h2>
+          <NFTGrid>
+            <AnimatePresence>
+              {userNFTs.map((nft) => (
+                <NFTCard
+                  key={nft.id}
+                  variants={itemVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit={{ opacity: 0, scale: 0.5 }}
+                >
+                  <NFTImage src={nft.image} alt={nft.name} />
+                  <h3>{nft.name}</h3>
+                  <p>Price: {nft.price} {nft.blockchain}</p>
+                  <p>IPFS Hash: {nft.ipfsHash}</p>
+                  <p>NFT Hash: {nft.hash}</p>
+                  <p>Seller: {nft.seller.slice(0, 6)}...{nft.seller.slice(-4)}</p>
+                </NFTCard>
+              ))}
+            </AnimatePresence>
+          </NFTGrid>
+        </UserNFTsSection>
+
         <Card variants={itemVariants}>
           <h2>Create NFT</h2>
           <Form onSubmit={handleCreateNFT}>
@@ -438,15 +556,12 @@ export default function MarketplacePage() {
                 {file ? file.name : 'Choose File'}
               </FileInputLabel>
             </InputGroup>
-            <Button 
-              type="submit"
-              whileHover={{ scale: 1.05 }} 
-              whileTap={{ scale: 0.95 }}
-            >
+            <Button type="submit">
               Create NFT
             </Button>
           </Form>
         </Card>
+        
         <Card variants={itemVariants}>
           <h2>Available NFTs</h2>
           <SearchBar 
@@ -468,23 +583,14 @@ export default function MarketplacePage() {
                   <NFTImage src={nft.image_url} alt={nft.name} />
                   <h3>{nft.name}</h3>
                   <p>Price: {nft.price} ETH</p>
-                  <Button 
-                    onClick={() => handleBuyNFT(nft.id)}
-                    whileHover={{ scale: 1.05 }} 
-                    whileTap={{ scale: 0.95 }}
-                  >
+                  <Button onClick={() => handleBuyNFT(nft.id)}>
                     Buy NFT
                   </Button>
                 </NFTCard>
               ))}
             </AnimatePresence>
           </NFTGrid>
-          <Button 
-            onClick={handleLoadMore}
-            whileHover={{ scale: 1.05 }} 
-            whileTap={{ scale: 0.95 }}
-            style={{ marginTop: '2rem' }}
-          >
+          <Button onClick={handleLoadMore} style={{ marginTop: '2rem' }}>
             Load More
           </Button>
         </Card>

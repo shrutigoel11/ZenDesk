@@ -172,10 +172,10 @@ export default function HomePage() {
             Home
           </NavLink>
           <NavLink 
-            onClick={() => handleNavigation('crypto')} 
+            onClick={() => handleNavigation('wallet')} 
             whileHover={{ scale: 1.05 }} 
             whileTap={{ scale: 0.95 }}
-            isActive={pathname === '/crypto'}
+            isActive={pathname === '/wallet'}
           >
             Crypto
           </NavLink>

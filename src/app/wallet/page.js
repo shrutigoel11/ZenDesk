@@ -443,10 +443,10 @@ return (
             Home
           </NavLink>
           <NavLink 
-            onClick={() => router.push('/crypto')} 
+            onClick={() => router.push('/wallet')} 
             whileHover={{ scale: 1.05 }} 
             whileTap={{ scale: 0.95 }}
-            isActive={pathname === '/crypto'}
+            isActive={pathname === '/wallet'}
           >
             Crypto
           </NavLink>

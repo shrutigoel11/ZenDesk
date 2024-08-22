@@ -1,15 +1,15 @@
-import { connectToDatabase } from '../../utils/dbConnect';
+import { connectToDatabase } from '../../../../utils/dbConnect';
 import { NextResponse } from 'next/server';
 
 export async function GET(request, { params }) {
   try {
-    const { address } = params || {};
+    const db = await connectToDatabase();
+    const { address } = params;
 
-    // 1. Handle case where no address is provided
+    // Handle default profile (no address provided)
     if (!address || address.length === 0) {
-      const db = await connectToDatabase();
       const defaultProfile = await db.collection('profiles').findOne({ isDefault: true });
-
+      
       if (defaultProfile) {
         return NextResponse.json(defaultProfile);
       } else {
@@ -17,8 +17,7 @@ export async function GET(request, { params }) {
       }
     }
 
-    // 2. Fetch profile by address (when address is provided)
-    const db = await connectToDatabase();
+    // Handle specific profile (address provided)
     const profile = await db.collection('profiles').findOne({ walletAddress: address[0] });
 
     if (profile) {

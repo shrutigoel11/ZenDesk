@@ -8,8 +8,7 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_CONTRACT_ADDRESS: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS,
   },
-  // Add these lines:
-  output: 'standalone',
+  // Remove the 'output: "standalone"' line
   experimental: {
     appDir: true,
   },

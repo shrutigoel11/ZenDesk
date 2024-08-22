@@ -8,10 +8,7 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_CONTRACT_ADDRESS: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS,
   },
-  // Remove the 'output: "standalone"' line
-  experimental: {
-    appDir: true,
-  },
+  // Remove the experimental and output options
 };
 
 module.exports = nextConfig;

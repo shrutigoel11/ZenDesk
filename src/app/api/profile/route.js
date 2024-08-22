@@ -1,19 +1,25 @@
-// import { connectToDatabase } from '../../../utils/dbConnect';
-// import { NextResponse } from 'next/server';
+import { connectToDatabase } from '../../../../../utils/dbConnect';
+import { NextResponse } from 'next/server';
 
-// export async function POST(request) {
-//   try {
-//     const { walletAddress, name, email, phone, about, profileImage } = await request.json();
-//     const db = await connectToDatabase();
+export async function GET(request) {
+  const { searchParams } = new URL(request.url);
+  const address = searchParams.get('address');
+
+  if (!address) {
+    return NextResponse.json({ message: 'Address is required' }, { status: 400 });
+  }
+
+  try {
+    const db = await connectToDatabase();
     
-//     await db.collection('profiles').updateOne(
-//       { walletAddress },
-//       { $set: { name, email, phone, about, profileImage } },
-//       { upsert: true }
-//     );
+    const profile = await db.collection('profiles').findOne({ walletAddress: address });
 
-//     return NextResponse.json({ message: 'Profile updated successfully' });
-//   } catch (error) {
-//     return NextResponse.json({ message: 'Error updating profile', error: error.message }, { status: 500 });
-//   }
-// }
+    if (profile) {
+      return NextResponse.json(profile);
+    } else {
+      return NextResponse.json({ message: 'Profile not found' }, { status: 404 });
+    }
+  } catch (error) {
+    return NextResponse.json({ message: 'Error fetching profile', error: error.message }, { status: 500 });
+  }
+}

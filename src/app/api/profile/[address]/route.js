@@ -1,6 +1,8 @@
 import { connectToDatabase } from '../../../../utils/dbConnect';
 import { NextResponse } from 'next/server';
-
+export async function generateStaticParams() {
+  return [];
+}
 export async function GET(request, { params }) {
   try {
     const { address } = params;

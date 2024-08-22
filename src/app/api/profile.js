@@ -1,28 +1,33 @@
-import { connectToDatabase } from '../../utils/dbConnect';
+import { connectToDatabase } from '../../../utils/dbConnect';
+import { NextResponse } from 'next/server';
 
-export default async function handler(req, res) {
-  if (req.method === 'POST') {
-    try {
-      const { walletAddress, name, email, phone, about, profileImage } = req.body;
-      console.log('Received data:', { walletAddress, name, email, phone, about, profileImage });
-      
-      const db = await connectToDatabase();
-      console.log('Connected to database');
-      
-      const result = await db.collection('profiles').updateOne(
-        { walletAddress },
-        { $set: { name, email, phone, about, profileImage } },
-        { upsert: true }
-      );
-      console.log('Database operation result:', result);
+export async function GET(request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const address = searchParams.get('address');
 
-      res.status(200).json({ message: 'Profile updated successfully' });
-    } catch (error) {
-      console.error('Error in /api/profile:', error);
-      res.status(500).json({ message: 'Error updating profile', error: error.toString() });
+    const db = await connectToDatabase();
+
+    // Handle case where no address is provided
+    if (!address) {
+      const defaultProfile = await db.collection('profiles').findOne({ isDefault: true });
+      
+      if (defaultProfile) {
+        return NextResponse.json(defaultProfile);
+      } else {
+        return NextResponse.json({ message: 'No default profile found' }, { status: 404 });
+      }
     }
-  } else {
-    res.setHeader('Allow', ['POST']);
-    res.status(405).end(`Method ${req.method} Not Allowed`);
+
+    // Fetch profile by address
+    const profile = await db.collection('profiles').findOne({ walletAddress: address });
+
+    if (profile) {
+      return NextResponse.json(profile);
+    } else {
+      return NextResponse.json({ message: 'Profile not found' }, { status: 404 });
+    }
+  } catch (error) {
+    return NextResponse.json({ message: 'Error fetching profile', error: error.message }, { status: 500 });
   }
 }

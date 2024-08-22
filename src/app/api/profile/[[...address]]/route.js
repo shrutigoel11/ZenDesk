@@ -1,20 +1,17 @@
 import { connectToDatabase } from '../../../../utils/dbConnect';
 import { NextResponse } from 'next/server';
 
-export async function GET(request, { params }) {
+export async function GET(request) {
   try {
-    const { address } = params; 
+    const { searchParams } = new URL(request.url);
+    const address = searchParams.get('address');
 
-    // 1. Handle case where no address is provided
-    if (!address || address.length === 0) {
-      // You can customize this behavior based on your requirements
-      // Option 1: Return an error
-      // return NextResponse.json({ message: 'Address is required' }, { status: 400 }); 
+    const db = await connectToDatabase();
 
-      // Option 2: Fetch a default or featured profile (if applicable)
-      const db = await connectToDatabase();
-      const defaultProfile = await db.collection('profiles').findOne({ isDefault: true }); // Assuming you have a field to mark a default profile
-
+    // Handle case where no address is provided
+    if (!address) {
+      const defaultProfile = await db.collection('profiles').findOne({ isDefault: true });
+      
       if (defaultProfile) {
         return NextResponse.json(defaultProfile);
       } else {
@@ -22,9 +19,8 @@ export async function GET(request, { params }) {
       }
     }
 
-    // 2. Fetch profile by address (when address is provided)
-    const db = await connectToDatabase();
-    const profile = await db.collection('profiles').findOne({ walletAddress: address[0] });
+    // Fetch profile by address
+    const profile = await db.collection('profiles').findOne({ walletAddress: address });
 
     if (profile) {
       return NextResponse.json(profile);

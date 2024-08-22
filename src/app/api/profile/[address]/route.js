@@ -3,19 +3,9 @@ import { NextResponse } from 'next/server';
 export async function generateStaticParams() {
   return [];
 }
-export async function GET(request, { params }) {
-  try {
-    const { address } = params;
-    const db = await connectToDatabase();
-    
-    const profile = await db.collection('profiles').findOne({ walletAddress: address });
-
-    if (profile) {
-      return NextResponse.json(profile);
-    } else {
-      return NextResponse.json({ message: 'Profile not found' }, { status: 404 });
-    }
-  } catch (error) {
-    return NextResponse.json({ message: 'Error fetching profile', error: error.message }, { status: 500 });
-  }
+export async function GET() {
+  return new Response('Hello, World!', {
+    status: 200,
+    headers: { 'Content-Type': 'text/plain' },
+  });
 }

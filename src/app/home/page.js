@@ -160,7 +160,7 @@ export default function HomePage() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
         >
-          <Image src={logo} alt="Zendesk" width={80} height={45} />
+          <Image src={logo} alt="Zendesk" width={180} height={55} />
         </Logo>
         <Nav>
           <NavLink 

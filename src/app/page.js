@@ -342,7 +342,7 @@
           transition={{ duration: 0.3 }}
         >
           <Logo>
-            <Image src={logo} alt="Zendesk" width={80} height={45} />
+            <Image src={logo} alt="Zendesk" width={180} height={55} />
           </Logo>
           <Nav>
             {['Explore', 'News', 'Developers', 'Designers'].map((item) => (

@@ -6,7 +6,8 @@ import { motion } from 'framer-motion';
 import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import logo from '../logo.png';
-import { FaEdit } from 'react-icons/fa';
+import { FaEdit, FaInstagram, FaTwitter, FaLinkedin, FaGithub, FaCamera, FaUser } from 'react-icons/fa';
+
 
 const Container = styled(motion.div)`
   min-height: 100vh;
@@ -182,23 +183,93 @@ const TextArea = styled.textarea`
 `;
 
 const ProfileCard = styled(Card)`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 2rem;
+  align-items: start;
+`;
+
+const ProfileImageContainer = styled.div`
+position: relative;
+width: 200px;
+height: 200px;
+border-radius: 50%;
+overflow: hidden;
+margin: 0 auto;
+background-color: #2a0a4a; // Add this line for a background color
+display: flex;
+justify-content: center;
+align-items: center;
 `;
 
 const ProfileImage = styled.img`
-  width: 150px;
-  height: 150px;
-  border-radius: 50%;
-  object-fit: cover;
-  margin-bottom: 1rem;
+width: 100%;
+height: 100%;
+object-fit: cover;
 `;
 
-const EditIcon = styled(FaEdit)`
-  cursor: pointer;
-  margin-left: 10px;
+const DefaultProfileIcon = styled(FaUser)`
+font-size: 100px;
+color: #ff4d6d;
 `;
+
+const ProfileImageUpload = styled.label`
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background-color: rgba(255, 77, 109, 0.8);
+  color: white;
+  padding: 0.5rem;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background-color: rgba(255, 77, 109, 1);
+  }
+`;
+
+const ProfileDetails = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
+const ProfileField = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+const ProfileLabel = styled.label`
+  font-size: 0.9rem;
+  color: #b8b8b8;
+  margin-bottom: 0.25rem;
+`;
+
+const ProfileValue = styled.p`
+  font-size: 1rem;
+  color: white;
+`;
+
+const SocialLinks = styled.div`
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+`;
+
+
+
+const SocialIcon = styled.a`
+  color: white;
+  font-size: 1.5rem;
+  transition: color 0.3s ease;
+
+  &:hover {
+    color: #ff4d6d;
+  }
+`;
+
+
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -216,17 +287,21 @@ const itemVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0 }
 };
-
 export default function ProfilePage() {
+  const router = useRouter();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const pathname = usePathname();
   const [phone, setPhone] = useState('');
   const [about, setAbout] = useState('');
   const [profileImage, setProfileImage] = useState(null);
   const [walletAddress, setWalletAddress] = useState('');
   const [isEditing, setIsEditing] = useState(false);
-  const router = useRouter();
-  const pathname = usePathname();
+  // Add these new state variables
+  const [instagram, setInstagram] = useState('');
+  const [twitter, setTwitter] = useState('');
+  const [linkedin, setLinkedin] = useState('');
+  const [github, setGithub] = useState('');
 
   useEffect(() => {
     const connectedAddress = localStorage.getItem('connectedAddress');
@@ -236,7 +311,7 @@ export default function ProfilePage() {
     } else {
       router.push('/');
     }
-  }, [router]);
+  }, []); // Remove router from the dependency array
 
   const fetchUserData = async (address) => {
     try {
@@ -248,6 +323,11 @@ export default function ProfilePage() {
         setPhone(userData.phone || '');
         setAbout(userData.about || '');
         setProfileImage(userData.profileImage || null);
+        // Add these new setters
+        setInstagram(userData.instagram || '');
+        setTwitter(userData.twitter || '');
+        setLinkedin(userData.linkedin || '');
+        setGithub(userData.github || '');
       } else if (response.status === 404) {
         console.log('Profile not found. This is expected for new users.');
       } else {
@@ -278,7 +358,20 @@ export default function ProfilePage() {
           throw new Error('Failed to upload image');
         }
       }
-
+  
+      console.log('Sending profile update request:', {
+        walletAddress,
+        name,
+        email,
+        phone,
+        about,
+        profileImage: imageUrl,
+        instagram,
+        twitter,
+        linkedin,
+        github,
+      });
+  
       const response = await fetch('/api/profile', {
         method: 'POST',
         headers: {
@@ -291,14 +384,43 @@ export default function ProfilePage() {
           phone,
           about,
           profileImage: imageUrl,
+          instagram,
+          twitter,
+          linkedin,
+          github,
         }),
       });
-
+  
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+  
+      const responseText = await response.text();
+      console.log('Raw response:', responseText);
+  
+      let responseData;
+      try {
+        responseData = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Error parsing response:', parseError);
+        throw new Error('Invalid response from server');
+      }
+  
       if (response.ok) {
+        // Update local state with the new profile data
+        setName(responseData.name);
+        setEmail(responseData.email);
+        setPhone(responseData.phone);
+        setAbout(responseData.about);
+        setProfileImage(responseData.profileImage);
+        setInstagram(responseData.instagram);
+        setTwitter(responseData.twitter);
+        setLinkedin(responseData.linkedin);
+        setGithub(responseData.github);
+  
         alert('Profile updated successfully!');
         setIsEditing(false);
       } else {
-        throw new Error('Failed to update profile');
+        throw new Error(responseData.message || 'Failed to update profile');
       }
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -328,7 +450,7 @@ export default function ProfilePage() {
           transition={{ delay: 0.5 }}
           onClick={() => router.push('/home')}
         >
-          <Image src={logo} alt="Zendesk" width={80} height={45} />
+          <Image src={logo} alt="Zendesk" width={180} height={55} />
         </Logo>
         <Nav>
           <NavLink 
@@ -378,80 +500,149 @@ export default function ProfilePage() {
         <Title variants={itemVariants}>User Profile</Title>
         
         <ProfileCard variants={itemVariants}>
-          {isEditing ? (
-            <Form onSubmit={handleProfileUpdate}>
-              <InputGroup>
-                <Label htmlFor="profileImage">Profile Image</Label>
-                {profileImage && (
-                  <ProfileImage src={
-                    profileImage instanceof File 
-                      ? URL.createObjectURL(profileImage) 
-                      : profileImage
-                  } alt="Profile" />
-                )}
-                <Input 
-                  id="profileImage"
-                  type="file" 
-                  onChange={handleImageChange} 
-                  accept="image/*"
-                />
-              </InputGroup>
-              <InputGroup>
-                <Label htmlFor="name">Name</Label>
-                <Input 
-                  id="name"
-                  type="text" 
-                  placeholder="Enter your name" 
-                  value={name} 
-                  onChange={(e) => setName(e.target.value)} 
-                  required 
-                />
-              </InputGroup>
-              <InputGroup>
-                <Label htmlFor="email">Email</Label>
-                <Input 
-                  id="email"
-                  type="email" 
-                  placeholder="Enter your email" 
-                  value={email} 
-                  onChange={(e) => setEmail(e.target.value)} 
-                  required 
-                />
-              </InputGroup>
-              <InputGroup>
-                <Label htmlFor="phone">Phone Number</Label>
-                <Input 
-                  id="phone"
-                  type="tel" 
-                  placeholder="Enter your phone number" 
-                  value={phone} 
-                  onChange={(e) => setPhone(e.target.value)} 
-                />
-              </InputGroup>
-              <InputGroup>
-                <Label htmlFor="about">About</Label>
-                <TextArea 
-                  id="about"
-                  placeholder="Tell us about yourself" 
-                  value={about} 
-                  onChange={(e) => setAbout(e.target.value)} 
-                />
-              </InputGroup>
-              <Button type="submit">
-                Update Profile
-              </Button>
-            </Form>
-          ) : (
-            <>
-              <h2>Your Profile <EditIcon onClick={() => setIsEditing(true)} /></h2>
-              {profileImage && <ProfileImage src={profileImage} alt="Profile" />}
-              <p>Name: {name}</p>
-              <p>Email: {email}</p>
-              <p>Phone: {phone}</p>
-              <p>About: {about}</p>
-              <p>Wallet Address: {walletAddress}</p>
-            </>
-          )}
+        <ProfileImageContainer>
+  {profileImage ? (
+    <ProfileImage 
+      src={profileImage instanceof File ? URL.createObjectURL(profileImage) : profileImage} 
+      alt="Profile" 
+    />
+  ) : (
+    <DefaultProfileIcon />
+  )}
+  {isEditing && (
+    <ProfileImageUpload htmlFor="profileImage">
+      <FaCamera />
+      <input 
+        id="profileImage"
+        type="file" 
+        onChange={handleImageChange} 
+        accept="image/*"
+        style={{ display: 'none' }}
+      />
+    </ProfileImageUpload>
+  )}
+</ProfileImageContainer>
+          
+          <ProfileDetails>
+            {isEditing ? (
+              <Form onSubmit={handleProfileUpdate}>
+                <InputGroup>
+                  <Label htmlFor="name">Name</Label>
+                  <Input 
+                    id="name"
+                    type="text" 
+                    placeholder="Enter your name" 
+                    value={name} 
+                    onChange={(e) => setName(e.target.value)} 
+                    required 
+                  />
+                </InputGroup>
+                <InputGroup>
+                  <Label htmlFor="email">Email</Label>
+                  <Input 
+                    id="email"
+                    type="email" 
+                    placeholder="Enter your email" 
+                    value={email} 
+                    onChange={(e) => setEmail(e.target.value)} 
+                    required 
+                  />
+                </InputGroup>
+                <InputGroup>
+                  <Label htmlFor="phone">Phone Number</Label>
+                  <Input 
+                    id="phone"
+                    type="tel" 
+                    placeholder="Enter your phone number" 
+                    value={phone} 
+                    onChange={(e) => setPhone(e.target.value)} 
+                  />
+                </InputGroup>
+                <InputGroup>
+                  <Label htmlFor="about">About</Label>
+                  <TextArea 
+                    id="about"
+                    placeholder="Tell us about yourself" 
+                    value={about} 
+                    onChange={(e) => setAbout(e.target.value)} 
+                  />
+                </InputGroup>
+                <InputGroup>
+                  <Label htmlFor="instagram">Instagram</Label>
+                  <Input 
+                    id="instagram"
+                    type="text" 
+                    placeholder="Your Instagram username" 
+                    value={instagram} 
+                    onChange={(e) => setInstagram(e.target.value)} 
+                  />
+                </InputGroup>
+                <InputGroup>
+                  <Label htmlFor="twitter">Twitter</Label>
+                  <Input 
+                    id="twitter"
+                    type="text" 
+                    placeholder="Your Twitter username" 
+                    value={twitter} 
+                    onChange={(e) => setTwitter(e.target.value)} 
+                  />
+                </InputGroup>
+                <InputGroup>
+                  <Label htmlFor="linkedin">LinkedIn</Label>
+                  <Input 
+                    id="linkedin"
+                    type="text" 
+                    placeholder="Your LinkedIn profile URL" 
+                    value={linkedin} 
+                    onChange={(e) => setLinkedin(e.target.value)} 
+                  />
+                </InputGroup>
+                <InputGroup>
+                  <Label htmlFor="github">GitHub</Label>
+                  <Input 
+                    id="github"
+                    type="text" 
+                    placeholder="Your GitHub username" 
+                    value={github} 
+                    onChange={(e) => setGithub(e.target.value)} 
+                  />
+                </InputGroup>
+                <Button type="submit">
+                  Update Profile
+                </Button>
+              </Form>
+            ) : (
+              <>
+                <h2>Your Profile <FaEdit onClick={() => setIsEditing(true)} style={{ cursor: 'pointer', marginLeft: '10px' }} /></h2>
+                <ProfileField>
+                  <ProfileLabel>Name</ProfileLabel>
+                  <ProfileValue>{name}</ProfileValue>
+                </ProfileField>
+                <ProfileField>
+                  <ProfileLabel>Email</ProfileLabel>
+                  <ProfileValue>{email}</ProfileValue>
+                </ProfileField>
+                <ProfileField>
+                  <ProfileLabel>Phone</ProfileLabel>
+                  <ProfileValue>{phone}</ProfileValue>
+                </ProfileField>
+                <ProfileField>
+                  <ProfileLabel>About</ProfileLabel>
+                  <ProfileValue>{about}</ProfileValue>
+                </ProfileField>
+                <ProfileField>
+                  <ProfileLabel>Wallet Address</ProfileLabel>
+                  <ProfileValue>{walletAddress}</ProfileValue>
+                </ProfileField>
+                <SocialLinks>
+                  {instagram && <SocialIcon href={`https://instagram.com/${instagram}`} target="_blank"><FaInstagram /></SocialIcon>}
+                  {twitter && <SocialIcon href={`https://twitter.com/${twitter}`} target="_blank"><FaTwitter /></SocialIcon>}
+                  {linkedin && <SocialIcon href={linkedin} target="_blank"><FaLinkedin /></SocialIcon>}
+                  {github && <SocialIcon href={`https://github.com/${github}`} target="_blank"><FaGithub /></SocialIcon>}
+                </SocialLinks>
+              </>
+            )}
+          </ProfileDetails>
         </ProfileCard>
       </MainContent>
     </Container>

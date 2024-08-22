@@ -349,7 +349,7 @@ const itemVariants = {
           transition={{ delay: 0.5 }}
           onClick={() => router.push('/home')}
         >
-          <Image src={logo} alt="Zendesk" width={80} height={45} />
+          <Image src={logo} alt="Zendesk" width={180} height={55} />
         </Logo>
         <Nav>
           <NavLink 

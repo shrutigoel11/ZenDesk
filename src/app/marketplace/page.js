@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 import { motion } from 'framer-motion';
 import { useRouter, usePathname } from 'next/navigation';
@@ -206,6 +206,63 @@ const FileInputLabel = styled.label`
   }
 `;
 
+const NFTGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+`;
+
+const NFTCard = styled(motion.div)`
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+  }
+`;
+
+const NFTImage = styled.img`
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+`;
+
+const NFTInfo = styled.div`
+  padding: 1rem;
+`;
+
+const NFTName = styled.h3`
+  margin: 0;
+  color: #ff4d6d;
+`;
+
+const NFTPrice = styled.p`
+  margin: 0.5rem 0;
+  color: #b8b8b8;
+`;
+
+const NFTDetails = styled(motion.div)`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(26, 0, 48, 0.9);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+`;
+
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: { 
@@ -221,15 +278,41 @@ const containerVariants = {
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0 }
-};
-
-export default function MarketplacePage() {
+};export default function MarketplacePage() {
   const [name, setName] = useState('');
+  const [nfts, setNfts] = useState([]);
   const [price, setPrice] = useState('');
   const [blockchain, setBlockchain] = useState('ETH');
   const [file, setFile] = useState(null);
   const router = useRouter();
   const pathname = usePathname();
+
+  useEffect(() => {
+    const fetchNFTs = async () => {
+      try {
+        console.log('Fetching NFTs...');
+        const response = await fetch('/api/opensea-nfts');
+        console.log('API response status:', response.status);
+        if (!response.ok) {
+          throw new Error(`API responded with ${response.status}`);
+        }
+        const data = await response.json();
+        console.log('API response data:', data);
+        if (data && data.assets && data.assets.length > 0) {
+          console.log('Setting NFTs:', data.assets);
+          setNfts(data.assets);
+        } else {
+          console.error('Unexpected data structure or no assets:', data);
+          setNfts([]); // Set to empty array to trigger "No NFTs available" message
+        }
+      } catch (error) {
+        console.error('Error fetching NFTs:', error);
+        setNfts([]); // Set to empty array to trigger "No NFTs available" message
+      }
+    };
+  
+    fetchNFTs();
+  }, []);
 
   const handleCreateNFT = async (e) => {
     e.preventDefault();
@@ -363,6 +446,47 @@ export default function MarketplacePage() {
             </Button>
           </Form>
         </Card>
+        <Card variants={itemVariants}>
+  <h2>Browse NFTs</h2>
+  <NFTGrid>
+  {nfts.length > 0 ? (
+    nfts.map((nft) => (
+      <NFTCard key={nft.id} whileHover={{ scale: 1.05 }}>
+        <NFTImage src={nft.image_url} alt={nft.name || 'NFT'} />
+        <NFTInfo>
+          <NFTName>{nft.name || 'Unnamed NFT'}</NFTName>
+          <NFTPrice>
+            {nft.last_sale && nft.last_sale.payment_token
+              ? `${nft.last_sale.payment_token.eth_price.toFixed(4)} ETH`
+              : 'No price data'}
+          </NFTPrice>
+        </NFTInfo>
+        <NFTDetails
+          initial={{ opacity: 0 }}
+          whileHover={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <h3>{nft.name || 'Unnamed NFT'}</h3>
+          <p>Collection: {nft.collection ? nft.collection.name : 'Unknown'}</p>
+          <p>Description: {nft.description ? nft.description.substring(0, 100) + '...' : 'No description'}</p>
+          <p>
+            Price: {nft.last_sale && nft.last_sale.payment_token
+              ? `${nft.last_sale.payment_token.eth_price.toFixed(4)} ETH`
+              : 'No price data'}
+          </p>
+          {nft.permalink && (
+            <Button as="a" href={nft.permalink} target="_blank" rel="noopener noreferrer">
+              View on OpenSea
+            </Button>
+          )}
+        </NFTDetails>
+      </NFTCard>
+    ))
+  ) : (
+    <p>No NFTs available. There might be an issue with the API or no NFTs match the criteria.</p>
+  )}
+</NFTGrid>
+</Card>
       </MainContent>
     </Container>
   );

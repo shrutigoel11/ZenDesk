@@ -204,6 +204,12 @@ export default function HomePage() {
             Tokens
           </NavLink>
           <NavLink 
+            onClick={() => router.push('/profile')} 
+            isActive={pathname === '/profile'}
+          >
+            Profile
+          </NavLink>
+          <NavLink 
             onClick={handleLogout} 
             whileHover={{ scale: 1.05 }} 
             whileTap={{ scale: 0.95 }}

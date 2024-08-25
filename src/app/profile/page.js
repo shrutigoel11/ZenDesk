@@ -355,7 +355,7 @@ const pinJSONToIPFS = async (JSONBody) => {
 
 const fetchUserData = async (address) => {
   try {
-    const response = await fetch(`/api/profile/${address}`);
+    const response = await fetch(`/api/profile?address=${address}`);
     if (response.ok) {
       const { ipfsHash } = await response.json();
       if (ipfsHash) {
@@ -381,6 +381,8 @@ const fetchUserData = async (address) => {
     console.error('Error fetching user data:', error);
   }
 };
+
+
 
   const handleProfileUpdate = async (e) => {
     e.preventDefault();

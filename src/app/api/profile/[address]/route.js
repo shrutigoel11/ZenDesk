@@ -1,5 +1,5 @@
 // app/api/profile/[address]/route.js
-import { connectToDatabase } from '../../../utils/mongodb';
+import { connectToDatabase } from '../../../../utils/mongodb';
 import { NextResponse } from 'next/server';
 
 export async function GET(request, { params }) {

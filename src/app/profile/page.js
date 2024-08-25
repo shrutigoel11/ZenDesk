@@ -8,6 +8,7 @@ import Image from 'next/image';
 import logo from '../logo.png';
 import { FaEdit, FaInstagram, FaTwitter, FaLinkedin, FaGithub, FaCamera, FaUser } from 'react-icons/fa';
 import NavLinks from '../components/NavLinks';
+import axios from 'axios';
 
 
 const Container = styled(motion.div)`
@@ -292,75 +293,105 @@ export default function ProfilePage() {
   const router = useRouter();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const pathname = usePathname();
   const [phone, setPhone] = useState('');
   const [about, setAbout] = useState('');
   const [profileImage, setProfileImage] = useState(null);
   const [walletAddress, setWalletAddress] = useState('');
   const [isEditing, setIsEditing] = useState(false);
-  // Add these new state variables
   const [instagram, setInstagram] = useState('');
   const [twitter, setTwitter] = useState('');
   const [linkedin, setLinkedin] = useState('');
   const [github, setGithub] = useState('');
+  useEffect(() => {
+    const storedAddress = localStorage.getItem('connectedAddress');
+    if (storedAddress) {
+      setWalletAddress(storedAddress);
+    } else {
+      router.push('/'); // Redirect to home if no wallet address is found
+    }
+  }, []);
 
   useEffect(() => {
-    const connectedAddress = localStorage.getItem('connectedAddress');
-    if (connectedAddress) {
-      setWalletAddress(connectedAddress);
-      fetchUserData(connectedAddress);
-    } else {
-      router.push('/');
+    if (walletAddress) {
+      fetchUserData(walletAddress);
     }
-  }, []); // Remove router from the dependency array
+  }, [walletAddress]);
 
-  const fetchUserData = async (address) => {
-    try {
-      const response = await fetch(`/api/profile/${address}`);
-      if (response.ok) {
-        const userData = await response.json();
-        setName(userData.name || '');
-        setEmail(userData.email || '');
-        setPhone(userData.phone || '');
-        setAbout(userData.about || '');
-        setProfileImage(userData.profileImage || null);
-        // Add these new setters
-        setInstagram(userData.instagram || '');
-        setTwitter(userData.twitter || '');
-        setLinkedin(userData.linkedin || '');
-        setGithub(userData.github || '');
-      } else if (response.status === 404) {
-        console.log('Profile not found. This is expected for new users.');
-      } else {
-        throw new Error('Failed to fetch user data');
-      }
-    } catch (error) {
-      console.error('Error fetching user data:', error);
+  const pinataApiKey = process.env.NEXT_PUBLIC_PINATA_API_KEY;
+const pinataSecretApiKey = process.env.NEXT_PUBLIC_PINATA_SECRET_API_KEY;
+
+const pinFileToIPFS = async (file) => {
+  const url = `https://api.pinata.cloud/pinning/pinFileToIPFS`;
+
+  let formData = new FormData();
+  formData.append('file', file);
+
+  const response = await axios.post(url, formData, {
+    maxContentLength: 'Infinity',
+    headers: {
+      'Content-Type': `multipart/form-data; boundary=${formData._boundary}`,
+      'pinata_api_key': pinataApiKey,
+      'pinata_secret_api_key': pinataSecretApiKey
     }
-  };
+  });
+
+  return response.data.IpfsHash;
+};
+
+const pinJSONToIPFS = async (JSONBody) => {
+  const url = `https://api.pinata.cloud/pinning/pinJSONToIPFS`;
+
+  const response = await axios.post(url, JSONBody, {
+    headers: {
+      'Content-Type': 'application/json',
+      'pinata_api_key': pinataApiKey,
+      'pinata_secret_api_key': pinataSecretApiKey
+    }
+  });
+
+  return response.data.IpfsHash;
+};
+
+
+const fetchUserData = async (address) => {
+  try {
+    const response = await fetch(`/api/profile/${address}`);
+    if (response.ok) {
+      const { ipfsHash } = await response.json();
+      if (ipfsHash) {
+        const profileDataResponse = await fetch(`https://gateway.pinata.cloud/ipfs/${ipfsHash}`);
+        const profileData = await profileDataResponse.json();
+        
+        setName(profileData.name || '');
+        setEmail(profileData.email || '');
+        setPhone(profileData.phone || '');
+        setAbout(profileData.about || '');
+        setProfileImage(profileData.profileImage || null);
+        setInstagram(profileData.instagram || '');
+        setTwitter(profileData.twitter || '');
+        setLinkedin(profileData.linkedin || '');
+        setGithub(profileData.github || '');
+      }
+    } else if (response.status === 404) {
+      console.log('Profile not found. This is expected for new users.');
+    } else {
+      throw new Error('Failed to fetch user data');
+    }
+  } catch (error) {
+    console.error('Error fetching user data:', error);
+  }
+};
 
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
     try {
       let imageUrl = profileImage;
       if (profileImage instanceof File) {
-        const formData = new FormData();
-        formData.append('file', profileImage);
-        
-        const uploadResponse = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData,
-        });
-        
-        if (uploadResponse.ok) {
-          const uploadResult = await uploadResponse.json();
-          imageUrl = uploadResult.imageUrl;
-        } else {
-          throw new Error('Failed to upload image');
-        }
+        const imageHash = await pinFileToIPFS(profileImage);
+        imageUrl = `ipfs://${imageHash}`;
       }
   
-      console.log('Sending profile update request:', {
+      const profileData = {
         walletAddress,
         name,
         email,
@@ -371,63 +402,34 @@ export default function ProfilePage() {
         twitter,
         linkedin,
         github,
-      });
+      };
+  
+      const ipfsHash = await pinJSONToIPFS(profileData);
   
       const response = await fetch('/api/profile', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          walletAddress,
-          name,
-          email,
-          phone,
-          about,
-          profileImage: imageUrl,
-          instagram,
-          twitter,
-          linkedin,
-          github,
-        }),
+        body: JSON.stringify({ walletAddress, ipfsHash }),
       });
   
-      console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
-  
-      const responseText = await response.text();
-      console.log('Raw response:', responseText);
-  
-      let responseData;
-      try {
-        responseData = JSON.parse(responseText);
-      } catch (parseError) {
-        console.error('Error parsing response:', parseError);
-        throw new Error('Invalid response from server');
-      }
-  
       if (response.ok) {
-        // Update local state with the new profile data
-        setName(responseData.name);
-        setEmail(responseData.email);
-        setPhone(responseData.phone);
-        setAbout(responseData.about);
-        setProfileImage(responseData.profileImage);
-        setInstagram(responseData.instagram);
-        setTwitter(responseData.twitter);
-        setLinkedin(responseData.linkedin);
-        setGithub(responseData.github);
-  
         alert('Profile updated successfully!');
         setIsEditing(false);
       } else {
-        throw new Error(responseData.message || 'Failed to update profile');
+        const errorData = await response.json();
+        console.error('Error response:', errorData);
+        throw new Error(`Failed to update profile: ${errorData.message}`);
       }
     } catch (error) {
       console.error('Error updating profile:', error);
       alert(`Error updating profile: ${error.message}`);
     }
   };
+
+
+  
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];

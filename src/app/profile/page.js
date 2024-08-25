@@ -382,8 +382,6 @@ const fetchUserData = async (address) => {
   }
 };
 
-
-
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
     try {

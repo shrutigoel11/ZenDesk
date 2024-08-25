@@ -1,3 +1,5 @@
+// app/api/profile/route.js or pages/api/profile.js
+
 import { connectToDatabase } from '../../utils/mongodb';
 import { NextResponse } from 'next/server';
 

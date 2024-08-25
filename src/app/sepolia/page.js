@@ -7,6 +7,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import logo from '../logo.png';
 import { ethers } from 'ethers';
+import NavLinks from '../components/NavLinks';
 
 // Styled components
 const Container = styled(motion.div)`
@@ -269,53 +270,7 @@ export default function SepoliaTestnetPage() {
           <Image src={logo} alt="Zendesk" width={180} height={55} />
         </Logo>
         <Nav>
-          <NavLink 
-            onClick={() => router.push('/home')} 
-            whileHover={{ scale: 1.05 }} 
-            whileTap={{ scale: 0.95 }}
-            isActive={pathname === '/home'}
-          >
-            Home
-          </NavLink>
-          <NavLink 
-            onClick={() => router.push('/wallet')} 
-            whileHover={{ scale: 1.05 }} 
-            whileTap={{ scale: 0.95 }}
-            isActive={pathname === '/wallet'}
-          >
-            Crypto
-          </NavLink>
-          <NavLink 
-            onClick={() => router.push('/marketplace')} 
-            whileHover={{ scale: 1.05 }} 
-            whileTap={{ scale: 0.95 }}
-            isActive={pathname === '/marketplace'}
-          >
-            Marketplace
-          </NavLink>
-          <NavLink 
-            onClick={() => router.push('/sepolia')} 
-            whileHover={{ scale: 1.05 }} 
-            whileTap={{ scale: 0.95 }}
-            isActive={pathname === '/sepolia'}
-          >
-            Sepolia Testnet
-          </NavLink>
-          <NavLink 
-            onClick={() => router.push('/tokens')} 
-            whileHover={{ scale: 1.05 }} 
-            whileTap={{ scale: 0.95 }}
-            isActive={pathname === '/tokens'}
-          >
-            Tokens
-          </NavLink>
-          <NavLink 
-            onClick={() => router.push('/')} 
-            whileHover={{ scale: 1.05 }} 
-            whileTap={{ scale: 0.95 }}
-          >
-            Logout
-          </NavLink>
+          <NavLinks />
         </Nav>
       </Header>
       <MainContent>

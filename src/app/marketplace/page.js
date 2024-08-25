@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import logo from '../logo.png';
+import NavLinks from '../components/NavLinks';
 
 const Container = styled(motion.div)`
   min-height: 100vh;
@@ -352,41 +353,7 @@ const itemVariants = {
           <Image src={logo} alt="Zendesk" width={180} height={55} />
         </Logo>
         <Nav>
-          <NavLink 
-            onClick={() => router.push('/home')} 
-            isActive={pathname === '/home'}
-          >
-            Home
-          </NavLink>
-          <NavLink 
-            onClick={() => router.push('/wallet')} 
-            isActive={pathname === '/wallet'}
-          >
-            Crypto
-          </NavLink>
-          <NavLink 
-            onClick={() => router.push('/marketplace')} 
-            isActive={pathname === '/marketplace'}
-          >
-            Marketplace
-          </NavLink>
-          <NavLink 
-            onClick={() => router.push('/sepolia')} 
-            isActive={pathname === '/sepolia'}
-          >
-            Sepolia Testnet
-          </NavLink>
-          <NavLink 
-            onClick={() => router.push('/tokens')} 
-            isActive={pathname === '/tokens'}
-          >
-            Tokens
-          </NavLink>
-          <NavLink 
-            onClick={() => router.push('/')} 
-          >
-            Logout
-          </NavLink>
+          <NavLinks />
         </Nav>
       </Header>
       <MainContent>

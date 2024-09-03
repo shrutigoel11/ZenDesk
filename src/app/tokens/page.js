@@ -1,44 +1,41 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Bar, Pie, Line, Radar } from 'react-chartjs-2';
+import { motion } from 'framer-motion';
+import dynamic from 'next/dynamic';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
+import NavLinks from '../components/NavLinks';
 import {
   Button, Container, Typography, Box, Grid, Paper, Slider, Switch,
-  FormControlLabel, Card, CardContent, IconButton, Tooltip
+  FormControlLabel, Card, CardContent, IconButton, Tooltip, AppBar, Toolbar
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import MovieIcon from '@mui/icons-material/Movie';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import {
-  Chart as ChartJS,
-  ArcElement,
-  Tooltip as ChartTooltip,
-  Legend,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  PointElement,
-  LineElement,
-  RadialLinearScale,
-  Filler
-} from 'chart.js';
 
-ChartJS.register(
-  ArcElement,
-  ChartTooltip,
-  Legend,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  PointElement,
-  LineElement,
-  RadialLinearScale,
-  Filler
-);
+// Dynamically import chart components to avoid SSR issues
+const Bar = dynamic(() => import('react-chartjs-2').then(mod => mod.Bar), { ssr: false });
+const Pie = dynamic(() => import('react-chartjs-2').then(mod => mod.Pie), { ssr: false });
+const Line = dynamic(() => import('react-chartjs-2').then(mod => mod.Line), { ssr: false });
+const Radar = dynamic(() => import('react-chartjs-2').then(mod => mod.Radar), { ssr: false });
+
+// Dynamically import Chart.js to avoid SSR issues
+import('chart.js').then((ChartModule) => {
+  ChartModule.Chart.register(
+    ChartModule.ArcElement,
+    ChartModule.Tooltip,
+    ChartModule.Legend,
+    ChartModule.CategoryScale,
+    ChartModule.LinearScale,
+    ChartModule.BarElement,
+    ChartModule.PointElement,
+    ChartModule.LineElement,
+    ChartModule.RadialLinearScale,
+    ChartModule.Filler
+  );
+});
 
 const lightTheme = createTheme({
   palette: {
@@ -199,17 +196,19 @@ export default function EnhancedTokensDashboard() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
-          <Typography variant="h2" component={motion.h2} initial={{ x: -100, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 0.5 }}>
+      <AppBar position="sticky">
+        <Toolbar>
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Tokens Dashboard
           </Typography>
+          <NavLinks />
           <FormControlLabel
             control={<Switch checked={darkMode} onChange={toggleDarkMode} />}
             label="Dark Mode"
           />
-        </Box>
-
+        </Toolbar>
+      </AppBar>
+      <Container maxWidth="lg" sx={{ py: 4 }}>
         <Grid container spacing={3}>
           <Grid item xs={12} md={4}>
             <Paper elevation={3} sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>

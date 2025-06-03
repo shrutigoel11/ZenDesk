@@ -18,14 +18,6 @@ ZenDesk is a full-fledged NFT marketplace built with **Next.js**, **Web3.js**, a
 
 ---
 
-## 🖼 Screenshots
-
-| Homepage                       | Mint NFT Page                    | Wallet Integration             |
-|-------------------------------|----------------------------------|-------------------------------|
-| ![Home](public/screens/home.png) | ![Mint](public/screens/mint.png) | ![Wallet](public/screens/wallet.png) |
-
----
-
 ## 📦 Tech Stack
 
 - **Frontend**: Next.js, TailwindCSS, React Icons

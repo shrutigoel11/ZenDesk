@@ -1,4 +1,51 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 🧿 ZenDesk - A Web3 NFT Marketplace
+
+This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app), developed as part of a university initiative at SRMIST.
+
+ZenDesk is a full-fledged NFT marketplace built with **Next.js**, **Web3.js**, and **Solidity**, focused on reducing gas fees using Layer 2 scaling. It integrates smart contract automation, multi-token support, fiat payment options, and monetization through Google AdSense.
+
+---
+
+## 🚀 Features
+
+- ⚡ **Layer 2 Scaling** for minimal gas fees (Polygon / Optimism)
+- 💳 **Multi-token & Fiat Payments** using MetaMask and Stripe
+- 🧠 **Smart Contract Automation** (minting, transferring, verifying)
+- 🧾 **Batch Processing** for grouped transactions
+- 📈 **Ads Integration** (Google AdSense)
+- 🧰 **Secure MongoDB Backend** for NFT metadata & users
+- 🛡️ **Wallet-based Auth (MetaMask)**
+
+---
+
+## 🖼 Screenshots
+
+| Homepage                       | Mint NFT Page                    | Wallet Integration             |
+|-------------------------------|----------------------------------|-------------------------------|
+| ![Home](public/screens/home.png) | ![Mint](public/screens/mint.png) | ![Wallet](public/screens/wallet.png) |
+
+---
+
+## 📦 Tech Stack
+
+- **Frontend**: Next.js, TailwindCSS, React Icons
+- **Backend**: Node.js, Express.js, MongoDB
+- **Blockchain**: Solidity (Ethereum), Polygon (L2)
+- **Web3 Tools**: Web3.js, MetaMask, WalletConnect
+- **Payments**: Stripe (Fiat), MetaMask (Crypto)
+- **Hosting**: Vercel (Frontend), Render/AWS (Backend)
+
+---
+
+## 💡 Architecture
+
+```txt
+Next.js UI → Web3.js → Solidity Smart Contracts (Polygon)
+        ↓
+    Express API → MongoDB
+        ↓
+Google AdSense + Stripe Monetization
+
 
 ## Getting Started
 
